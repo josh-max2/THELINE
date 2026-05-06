@@ -5,22 +5,13 @@
     "category": "kinetic",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#5a6f9d",
-      "stroke": "#0c1828",
-      "strokeWidth": 1,
+      "fill": "#5a6f9d", "stroke": "#0c1828", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -6, "y": -4, "w": 12, "h": 8 },
         { "kind": "rect", "x": 4, "y": -2, "w": 12, "h": 4, "fill": "#7287b7" }
       ]
     },
-    "behavior": {
-      "kind": "auto-fire",
-      "fireRate": 1.0,
-      "damage": 10,
-      "projectile": "kinetic-bolt",
-      "targeting": "closest",
-      "power": 1
-    }
+    "behavior": { "kind": "auto-fire", "fireRate": 1.0, "damage": 10, "projectile": "kinetic-bolt", "targeting": "closest", "power": 1 }
   },
   "gatling": {
     "id": "gatling",
@@ -28,9 +19,7 @@
     "category": "kinetic",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#6a7090",
-      "stroke": "#0c1828",
-      "strokeWidth": 1,
+      "fill": "#6a7090", "stroke": "#0c1828", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -6, "y": -5, "w": 12, "h": 10 },
         { "kind": "rect", "x": 6, "y": -3, "w": 8, "h": 2, "fill": "#9098b8" },
@@ -38,14 +27,52 @@
         { "kind": "rect", "x": 6, "y": 1, "w": 8, "h": 2, "fill": "#9098b8" }
       ]
     },
-    "behavior": {
-      "kind": "auto-fire",
-      "fireRate": 4.0,
-      "damage": 3,
-      "projectile": "kinetic-bolt",
-      "targeting": "closest",
-      "power": 1
-    }
+    "behavior": { "kind": "auto-fire", "fireRate": 4.0, "damage": 3, "projectile": "kinetic-bolt", "targeting": "closest", "power": 1 }
+  },
+  "railgun": {
+    "id": "railgun",
+    "name": "Railgun",
+    "category": "kinetic",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#404a5a", "stroke": "#0c1828", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -4, "y": -3, "w": 8, "h": 6 },
+        { "kind": "rect", "x": 2, "y": -1, "w": 18, "h": 2, "fill": "#80a0c0" },
+        { "kind": "circle", "x": 0, "y": 0, "r": 1.5, "fill": "#a0e0ff" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 0.3, "damage": 25, "projectile": "kinetic-bolt", "targeting": "closest", "power": 3 }
+  },
+  "shotgun": {
+    "id": "shotgun",
+    "name": "Shotgun",
+    "category": "kinetic",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#605840", "stroke": "#201808", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -4, "y": -4, "w": 8, "h": 8 },
+        { "kind": "rect", "x": 4, "y": -3, "w": 6, "h": 6, "fill": "#807060" },
+        { "kind": "rect", "x": 10, "y": -5, "w": 4, "h": 10, "fill": "#a09080" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 1.0, "damage": 4, "projectile": "kinetic-bolt", "targeting": "closest", "power": 2 }
+  },
+  "gauss-cannon": {
+    "id": "gauss-cannon",
+    "name": "Gauss Cannon",
+    "category": "kinetic",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#3050a0", "stroke": "#0c1830", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -4, "w": 12, "h": 8 },
+        { "kind": "circle", "x": 0, "y": 0, "r": 3, "fill": "#a0e0ff" },
+        { "kind": "rect", "x": 4, "y": -1, "w": 14, "h": 2, "fill": "#80c0e0" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 0.15, "damage": 50, "projectile": "kinetic-bolt", "targeting": "closest", "power": 4 }
   },
   "flamethrower": {
     "id": "flamethrower",
@@ -53,21 +80,13 @@
     "category": "fire",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#a04020",
-      "stroke": "#401008",
-      "strokeWidth": 1,
+      "fill": "#a04020", "stroke": "#401008", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -7, "y": -3, "w": 11, "h": 6 },
         { "kind": "tri", "points": [[4, -5], [13, 0], [4, 5]], "fill": "#e06030" }
       ]
     },
-    "behavior": {
-      "kind": "beam",
-      "damagePerSecond": 10,
-      "range": 220,
-      "color": "#ff5020",
-      "power": 1
-    }
+    "behavior": { "kind": "beam", "damagePerSecond": 10, "range": 220, "color": "#ff5020", "power": 1 }
   },
   "plasma-torch": {
     "id": "plasma-torch",
@@ -75,22 +94,59 @@
     "category": "fire",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#a04060",
-      "stroke": "#401020",
-      "strokeWidth": 1,
+      "fill": "#a04060", "stroke": "#401020", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -6, "y": -4, "w": 10, "h": 8 },
         { "kind": "circle", "x": -1, "y": 0, "r": 3, "fill": "#ffa080" },
         { "kind": "tri", "points": [[4, -5], [14, 0], [4, 5]], "fill": "#ff8060" }
       ]
     },
-    "behavior": {
-      "kind": "beam",
-      "damagePerSecond": 18,
-      "range": 280,
-      "color": "#ff8060",
-      "power": 2
-    }
+    "behavior": { "kind": "beam", "damagePerSecond": 18, "range": 280, "color": "#ff8060", "power": 2 }
+  },
+  "ignite-mortar": {
+    "id": "ignite-mortar",
+    "name": "Ignite Mortar",
+    "category": "fire",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#a04020", "stroke": "#401008", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": -8, "w": 10, "h": 12 },
+        { "kind": "rect", "x": -3, "y": -10, "w": 6, "h": 4, "fill": "#ff8040" }
+      ]
+    },
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.5, "damage": 12, "radius": 80, "range": 500, "color": "#ff7030", "power": 2 }
+  },
+  "napalm-spray": {
+    "id": "napalm-spray",
+    "name": "Napalm Spray",
+    "category": "fire",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#a04020", "stroke": "#401008", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -3, "w": 10, "h": 6 },
+        { "kind": "tri", "points": [[4, -5], [12, -8], [12, 0]], "fill": "#ff6020" },
+        { "kind": "tri", "points": [[4, 5], [12, 0], [12, 8]], "fill": "#ff6020" }
+      ]
+    },
+    "behavior": { "kind": "beam", "damagePerSecond": 8, "range": 180, "color": "#ff6020", "power": 2 }
+  },
+  "ember-volley": {
+    "id": "ember-volley",
+    "name": "Ember Volley",
+    "category": "fire",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#803020", "stroke": "#301008", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": -5, "w": 10, "h": 10 },
+        { "kind": "rect", "x": 5, "y": -3, "w": 6, "h": 2, "fill": "#ff8060" },
+        { "kind": "rect", "x": 5, "y": -1, "w": 6, "h": 2, "fill": "#ff8060" },
+        { "kind": "rect", "x": 5, "y": 1, "w": 6, "h": 2, "fill": "#ff8060" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 3.0, "damage": 4, "projectile": "kinetic-bolt", "targeting": "closest", "power": 2 }
   },
   "freeze-beam": {
     "id": "freeze-beam",
@@ -98,21 +154,13 @@
     "category": "cryo",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#4080a0",
-      "stroke": "#102030",
-      "strokeWidth": 1,
+      "fill": "#4080a0", "stroke": "#102030", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -7, "y": -2, "w": 13, "h": 4 },
         { "kind": "tri", "points": [[6, -4], [14, 0], [6, 4]], "fill": "#a0d8ff" }
       ]
     },
-    "behavior": {
-      "kind": "beam",
-      "damagePerSecond": 5,
-      "range": 320,
-      "color": "#80c0ff",
-      "power": 1
-    }
+    "behavior": { "kind": "beam", "damagePerSecond": 5, "range": 320, "color": "#80c0ff", "power": 1 }
   },
   "ice-mortar": {
     "id": "ice-mortar",
@@ -120,23 +168,56 @@
     "category": "cryo",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#5080a0",
-      "stroke": "#102030",
-      "strokeWidth": 1,
+      "fill": "#5080a0", "stroke": "#102030", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -6, "y": -8, "w": 12, "h": 12 },
         { "kind": "rect", "x": -4, "y": -10, "w": 8, "h": 4, "fill": "#a0d8ff" }
       ]
     },
-    "behavior": {
-      "kind": "aoe-pulse",
-      "fireRate": 0.4,
-      "damage": 15,
-      "radius": 100,
-      "range": 500,
-      "color": "#a0d8ff",
-      "power": 2
-    }
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.4, "damage": 15, "radius": 100, "range": 500, "color": "#a0d8ff", "power": 2 }
+  },
+  "frost-cannon": {
+    "id": "frost-cannon",
+    "name": "Frost Cannon",
+    "category": "cryo",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#406080", "stroke": "#101830", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -4, "w": 12, "h": 8 },
+        { "kind": "rect", "x": 4, "y": -2, "w": 12, "h": 4, "fill": "#80c0e0" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 1.5, "damage": 6, "projectile": "kinetic-bolt", "targeting": "closest", "power": 2 }
+  },
+  "blizzard-gen": {
+    "id": "blizzard-gen",
+    "name": "Blizzard Generator",
+    "category": "cryo",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#3060a0", "stroke": "#0c1830", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
+        { "kind": "circle", "x": 0, "y": -2, "r": 6, "fill": "#80c0e0" },
+        { "kind": "tri", "points": [[-4, -2], [0, -8], [4, -2]], "fill": "#ffffff" }
+      ]
+    },
+    "behavior": { "kind": "support-aura", "effect": "slow-aura", "magnitude": 0.5, "range": 180, "color": "#80c0e0", "power": 3 }
+  },
+  "glacial-spike": {
+    "id": "glacial-spike",
+    "name": "Glacial Spike",
+    "category": "cryo",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#406080", "stroke": "#101830", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -4, "y": -6, "w": 8, "h": 10 },
+        { "kind": "tri", "points": [[-4, -6], [0, -16], [4, -6]], "fill": "#a0e0ff" }
+      ]
+    },
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.4, "damage": 18, "radius": 70, "range": 500, "color": "#a0e0ff", "power": 2 }
   },
   "missile": {
     "id": "missile",
@@ -144,9 +225,7 @@
     "category": "explosive",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#a05030",
-      "stroke": "#301810",
-      "strokeWidth": 1,
+      "fill": "#a05030", "stroke": "#301810", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -8, "y": -2, "w": 14, "h": 4 },
         { "kind": "tri", "points": [[6, -3], [12, 0], [6, 3]], "fill": "#ffa040" },
@@ -154,15 +233,53 @@
         { "kind": "tri", "points": [[-8, 2], [-12, 5], [-8, 0]] }
       ]
     },
-    "behavior": {
-      "kind": "aoe-pulse",
-      "fireRate": 0.3,
-      "damage": 35,
-      "radius": 90,
-      "range": 600,
-      "color": "#ff8040",
-      "power": 2
-    }
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.3, "damage": 35, "radius": 90, "range": 600, "color": "#ff8040", "power": 2 }
+  },
+  "frag-cannon": {
+    "id": "frag-cannon",
+    "name": "Frag Cannon",
+    "category": "explosive",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#806040", "stroke": "#301810", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": -4, "w": 10, "h": 8 },
+        { "kind": "rect", "x": 4, "y": -3, "w": 8, "h": 6, "fill": "#a08060" },
+        { "kind": "circle", "x": 13, "y": -2, "r": 1.5, "fill": "#ff8040" },
+        { "kind": "circle", "x": 13, "y": 0, "r": 1.5, "fill": "#ff8040" },
+        { "kind": "circle", "x": 13, "y": 2, "r": 1.5, "fill": "#ff8040" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 1.5, "damage": 8, "projectile": "kinetic-bolt", "targeting": "closest", "power": 2 }
+  },
+  "mortar": {
+    "id": "mortar",
+    "name": "Mortar",
+    "category": "explosive",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#705030", "stroke": "#301810", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -7, "y": -10, "w": 14, "h": 14 },
+        { "kind": "rect", "x": -5, "y": -12, "w": 10, "h": 4, "fill": "#a07050" }
+      ]
+    },
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.25, "damage": 25, "radius": 120, "range": 600, "color": "#ff8040", "power": 3 }
+  },
+  "demo-charge": {
+    "id": "demo-charge",
+    "name": "Demo Charge",
+    "category": "explosive",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#a04020", "stroke": "#301008", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -7, "y": -5, "w": 14, "h": 10 },
+        { "kind": "rect", "x": -5, "y": -3, "w": 10, "h": 6, "fill": "#603018" },
+        { "kind": "circle", "x": 0, "y": 0, "r": 2, "fill": "#ffa040" }
+      ]
+    },
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.1, "damage": 60, "radius": 100, "range": 700, "color": "#ff6020", "power": 4 }
   },
   "lightning": {
     "id": "lightning",
@@ -170,22 +287,45 @@
     "category": "electric",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#508080",
-      "stroke": "#102030",
-      "strokeWidth": 1,
+      "fill": "#508080", "stroke": "#102030", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -6, "y": -3, "w": 9, "h": 6 },
         { "kind": "tri", "points": [[3, -4], [9, -1], [4, 0]], "fill": "#a0f0ff" },
         { "kind": "tri", "points": [[4, 0], [10, 4], [6, 1]], "fill": "#a0f0ff" }
       ]
     },
-    "behavior": {
-      "kind": "beam",
-      "damagePerSecond": 14,
-      "range": 260,
-      "color": "#a0f0ff",
-      "power": 1
-    }
+    "behavior": { "kind": "beam", "damagePerSecond": 14, "range": 260, "color": "#a0f0ff", "power": 1 }
+  },
+  "chain-lightning": {
+    "id": "chain-lightning",
+    "name": "Chain Lightning",
+    "category": "electric",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#406070", "stroke": "#0c1830", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -3, "w": 10, "h": 6 },
+        { "kind": "tri", "points": [[4, -4], [10, -1], [6, 1]], "fill": "#a0f0ff" },
+        { "kind": "tri", "points": [[6, 1], [12, 4], [8, -1]], "fill": "#a0f0ff" }
+      ]
+    },
+    "behavior": { "kind": "beam", "damagePerSecond": 10, "range": 240, "color": "#a0f0ff", "power": 2 }
+  },
+  "emp-pulse": {
+    "id": "emp-pulse",
+    "name": "EMP Pulse",
+    "category": "electric",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#506080", "stroke": "#0c1830", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
+        { "kind": "circle", "x": 0, "y": -1, "r": 6 },
+        { "kind": "circle", "x": 0, "y": -1, "r": 4, "fill": "#80a0c0" },
+        { "kind": "tri", "points": [[-3, -1], [0, -6], [3, -1]], "fill": "#a0f0ff" }
+      ]
+    },
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.2, "damage": 0, "radius": 150, "range": 400, "color": "#a0f0ff", "power": 3 }
   },
   "shield-emitter": {
     "id": "shield-emitter",
@@ -193,9 +333,7 @@
     "category": "support",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#4080a0",
-      "stroke": "#102030",
-      "strokeWidth": 1,
+      "fill": "#4080a0", "stroke": "#102030", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
         { "kind": "circle", "x": 0, "y": -1, "r": 6 },
@@ -203,14 +341,7 @@
         { "kind": "circle", "x": 0, "y": -1, "r": 2, "fill": "#e0f0ff" }
       ]
     },
-    "behavior": {
-      "kind": "support-aura",
-      "effect": "shield",
-      "magnitude": 0.5,
-      "range": 140,
-      "color": "#a0d0ff",
-      "power": 1
-    }
+    "behavior": { "kind": "support-aura", "effect": "shield", "magnitude": 0.5, "range": 140, "color": "#a0d0ff", "power": 1 }
   },
   "repair-drone": {
     "id": "repair-drone",
@@ -218,22 +349,105 @@
     "category": "support",
     "allowedSlots": ["top"],
     "render": {
-      "fill": "#408060",
-      "stroke": "#103020",
-      "strokeWidth": 1,
+      "fill": "#408060", "stroke": "#103020", "strokeWidth": 1,
       "shapes": [
         { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
         { "kind": "rect", "x": -1, "y": -8, "w": 2, "h": 10, "fill": "#a0ffa0" },
         { "kind": "rect", "x": -5, "y": -3, "w": 10, "h": 2, "fill": "#a0ffa0" }
       ]
     },
-    "behavior": {
-      "kind": "support-aura",
-      "effect": "repair",
-      "magnitude": 2,
-      "range": 120,
-      "color": "#a0ffa0",
-      "power": 1
-    }
+    "behavior": { "kind": "support-aura", "effect": "repair", "magnitude": 2, "range": 120, "color": "#a0ffa0", "power": 1 }
+  },
+  "decoy-launcher": {
+    "id": "decoy-launcher",
+    "name": "Decoy Launcher",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#605050", "stroke": "#202020", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": -3, "w": 10, "h": 6 },
+        { "kind": "rect", "x": -3, "y": -5, "w": 6, "h": 2, "fill": "#a0a0a0" },
+        { "kind": "circle", "x": 0, "y": -4, "r": 1.5, "fill": "#80c080" }
+      ]
+    },
+    "behavior": { "kind": "support-aura", "effect": "decoy", "magnitude": 1, "range": 80, "color": "#80c080", "power": 2 }
+  },
+  "magnetic-coil": {
+    "id": "magnetic-coil",
+    "name": "Magnetic Coil",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#404060", "stroke": "#101020", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -3, "w": 12, "h": 6 },
+        { "kind": "circle", "x": -3, "y": 0, "r": 3, "fill": "#a0a0c0" },
+        { "kind": "circle", "x": 3, "y": 0, "r": 3, "fill": "#a0a0c0" },
+        { "kind": "rect", "x": -1, "y": -1, "w": 2, "h": 2, "fill": "#ffffff" }
+      ]
+    },
+    "behavior": { "kind": "support-aura", "effect": "magnetism", "magnitude": 1, "range": 120, "color": "#a0a0c0", "power": 2 }
+  },
+  "target-paint": {
+    "id": "target-paint",
+    "name": "Target Paint",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#603030", "stroke": "#201010", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -4, "y": -2, "w": 8, "h": 4 },
+        { "kind": "rect", "x": 2, "y": -1, "w": 14, "h": 2, "fill": "#ff4040" },
+        { "kind": "circle", "x": 16, "y": 0, "r": 1.5, "fill": "#ff8080" }
+      ]
+    },
+    "behavior": { "kind": "support-aura", "effect": "mark", "magnitude": 1.25, "range": 200, "color": "#ff4040", "power": 1 }
+  },
+  "point-defense": {
+    "id": "point-defense",
+    "name": "Point Defense",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#506070", "stroke": "#101820", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -4, "y": -3, "w": 8, "h": 6 },
+        { "kind": "circle", "x": 0, "y": -1, "r": 3, "fill": "#80a0c0" },
+        { "kind": "rect", "x": -1, "y": -6, "w": 2, "h": 5, "fill": "#a0c0e0" }
+      ]
+    },
+    "behavior": { "kind": "auto-fire", "fireRate": 5.0, "damage": 5, "projectile": "kinetic-bolt", "targeting": "closest", "power": 2 }
+  },
+  "gravity-well": {
+    "id": "gravity-well",
+    "name": "Gravity Well",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#403060", "stroke": "#100820", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
+        { "kind": "circle", "x": 0, "y": -1, "r": 6, "fill": "#604080" },
+        { "kind": "circle", "x": 0, "y": -1, "r": 4, "fill": "#403060" },
+        { "kind": "circle", "x": 0, "y": -1, "r": 2, "fill": "#201020" }
+      ]
+    },
+    "behavior": { "kind": "support-aura", "effect": "gravity", "magnitude": 0.5, "range": 100, "color": "#604080", "power": 3 }
+  },
+  "veil-siphon": {
+    "id": "veil-siphon",
+    "name": "Veil Siphon",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#603080", "stroke": "#200840", "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": -3, "w": 10, "h": 6 },
+        { "kind": "tri", "points": [[-5, -3], [0, -10], [5, -3]], "fill": "#a040c0" },
+        { "kind": "circle", "x": 0, "y": -2, "r": 2, "fill": "#ff80ff" }
+      ]
+    },
+    "behavior": { "kind": "support-aura", "effect": "siphon", "magnitude": 1, "range": 80, "color": "#a040c0", "power": 4 }
   }
 }
