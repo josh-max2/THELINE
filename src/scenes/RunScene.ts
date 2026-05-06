@@ -7,6 +7,7 @@ import { CombatSystem } from '../systems/CombatSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { PowerSystem } from '../systems/PowerSystem';
 import { CrewSystem } from '../systems/CrewSystem';
+import { SlowTimeSystem } from '../systems/SlowTimeSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
 import { salvageStore } from '../lib/salvageStore';
@@ -27,6 +28,7 @@ export class RunScene extends Phaser.Scene {
   private powerPanel!: PowerPanel;
   private crewSystem!: CrewSystem;
   private crewPanel!: CrewPanel;
+  private slowTime!: SlowTimeSystem;
   private parallax!: ParallaxBackground;
   private salvageText!: Phaser.GameObjects.Text;
   private unsubscribeSalvage?: () => void;
@@ -85,8 +87,10 @@ export class RunScene extends Phaser.Scene {
     this.crewSystem.initializeDefaults();
     this.crewPanel = new CrewPanel(document.body, this.trainSystem, this.crewSystem);
 
+    this.slowTime = new SlowTimeSystem(this);
+
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.4 (Crew)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.5 (Slow-time)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -127,20 +131,25 @@ export class RunScene extends Phaser.Scene {
       this.itemSystem.destroyAll();
       this.powerPanel.destroy();
       this.crewPanel.destroy();
+      this.slowTime.destroy();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });
   }
 
   update(_time: number, deltaMs: number): void {
-    const dt = deltaMs / 1000;
+    const realDt = deltaMs / 1000;
+    // Slow-time tint fades on real time (so it can fade out when not paused).
+    this.slowTime.updateRealtime();
+    // Gameplay systems use scaled dt — Bastion-style slow per DESIGN §7.
+    const dt = realDt * this.slowTime.timeScale;
     this.parallax.update(dt);
     this.trainSystem.update(dt);
     this.enemySpawner.update(dt);
     this.combat.update(dt);
-    // PowerSystem must update BEFORE moduleSystem so handlers see fresh efficiency.
     this.powerSystem.update(dt);
     this.moduleSystem.update(dt);
-    this.saveSystem.update(dt);
+    // SaveSystem auto-save uses real time — saves should still happen at 30s wall-clock.
+    this.saveSystem.update(realDt);
   }
 }
