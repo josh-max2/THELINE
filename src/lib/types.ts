@@ -171,6 +171,35 @@ export function qualifySlot(carIndex: number, slotId: string): QualifiedSlotId {
 
 export type EnemyBehaviorKind = 'tracker' | 'ranged' | 'suicide' | 'boss';
 
+// ─── Environment (per ADR-003 + DESIGN §8) ────────────────────────────────
+
+export type BiomeId = 'rock' | 'forest' | 'sand' | 'swamp' | 'snow';
+
+export interface BiomeData {
+  id: BiomeId;
+  name: string;
+  /** Hex color used to tint the parallax horizon. */
+  tint: string;
+}
+
+export type WeaponDamageType =
+  | 'kinetic'
+  | 'fire'
+  | 'cryo'
+  | 'explosive'
+  | 'electric';
+
+export interface EnvironmentCell {
+  /** Short tag for the effect. Phase 5 maps tags to spawn behavior. */
+  effect: string;
+  damagePerSec: number;
+  durationSec: number;
+  /** Tint for the eventual zone visual. */
+  color: string;
+}
+
+export type EnvironmentMatrix = Record<WeaponDamageType, Record<BiomeId, EnvironmentCell>>;
+
 // ─── Encounters (per DESIGN §9 + Task 4.7) ────────────────────────────────
 
 export type EncounterKind = 'travel' | 'swarm' | 'mini-boss' | 'boss';
@@ -186,6 +215,8 @@ export interface EncounterTemplate {
   spawnIntervalSec: number;
   /** Enemies spawned immediately when the encounter activates (e.g. boss). */
   spawnAtStart?: string[];
+  /** Biome that EnvironmentSystem applies during this encounter. */
+  biome?: BiomeId;
 }
 
 export interface BossPhaseSpec {

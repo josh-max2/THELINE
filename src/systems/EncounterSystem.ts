@@ -2,8 +2,9 @@ import encountersDataRaw from '../data/encounters.json';
 import type { EncounterKind, EncounterTemplate } from '../lib/types';
 import { DEFAULT_SCHEDULE, slotAt } from '../lib/encounterPacing';
 import type { EnemySpawner } from './EnemySpawner';
+import type { EnvironmentSystem } from './EnvironmentSystem';
 
-const ENCOUNTERS = encountersDataRaw as Record<EncounterKind, EncounterTemplate>;
+const ENCOUNTERS = encountersDataRaw as unknown as Record<EncounterKind, EncounterTemplate>;
 
 /**
  * Cycles through a fixed schedule of encounters, applying each to the
@@ -18,11 +19,17 @@ export class EncounterSystem {
   private slotIndex = -1;
   private timeRemaining = 0;
   private active?: EncounterTemplate;
+  private environment?: EnvironmentSystem;
   private readonly listeners = new Set<(enc: EncounterTemplate, secLeft: number) => void>();
 
   constructor(spawner: EnemySpawner, schedule: ReadonlyArray<EncounterKind> = DEFAULT_SCHEDULE) {
     this.spawner = spawner;
     this.schedule = schedule;
+  }
+
+  /** Wire EnvironmentSystem so encounter advances change the biome tint. */
+  bindEnvironmentSystem(environment: EnvironmentSystem): void {
+    this.environment = environment;
   }
 
   /** Start the run at slot 0. */
@@ -65,6 +72,11 @@ export class EncounterSystem {
     // Apply to spawner: swap pool + interval.
     this.spawner.spawnIntervalSeconds = template.spawnIntervalSec;
     this.spawner.pool = new Map(Object.entries(template.pool));
+
+    // Update biome tint if wired.
+    if (template.biome && this.environment) {
+      this.environment.setBiome(template.biome);
+    }
 
     // One-shot spawns (e.g., boss).
     if (template.spawnAtStart) {

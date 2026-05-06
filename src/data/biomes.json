@@ -1,0 +1,27 @@
+{
+  "rock": {
+    "id": "rock",
+    "name": "Solid Rock",
+    "tint": "#3a3a44"
+  },
+  "forest": {
+    "id": "forest",
+    "name": "Forest",
+    "tint": "#1e2c1e"
+  },
+  "sand": {
+    "id": "sand",
+    "name": "Sand",
+    "tint": "#403424"
+  },
+  "swamp": {
+    "id": "swamp",
+    "name": "Swamp",
+    "tint": "#2a3a2c"
+  },
+  "snow": {
+    "id": "snow",
+    "name": "Snow",
+    "tint": "#3a4654"
+  }
+}

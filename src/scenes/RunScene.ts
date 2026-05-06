@@ -8,6 +8,7 @@ import { SaveSystem } from '../systems/SaveSystem';
 import { PowerSystem } from '../systems/PowerSystem';
 import { CrewSystem } from '../systems/CrewSystem';
 import { EncounterSystem } from '../systems/EncounterSystem';
+import { EnvironmentSystem } from '../systems/EnvironmentSystem';
 import { SlowTimeSystem } from '../systems/SlowTimeSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
@@ -30,6 +31,7 @@ export class RunScene extends Phaser.Scene {
   private crewSystem!: CrewSystem;
   private crewPanel!: CrewPanel;
   private slowTime!: SlowTimeSystem;
+  private environment!: EnvironmentSystem;
   private encounters!: EncounterSystem;
   private encounterText!: Phaser.GameObjects.Text;
   private unsubscribeEncounters?: () => void;
@@ -93,8 +95,12 @@ export class RunScene extends Phaser.Scene {
 
     this.slowTime = new SlowTimeSystem(this);
 
-    // Encounter cycle drives EnemySpawner per template.
+    // Environment must exist before encounters start so biome tint applies on first advance.
+    this.environment = new EnvironmentSystem(this.parallax);
+
+    // Encounter cycle drives EnemySpawner per template + biome tint via EnvironmentSystem.
     this.encounters = new EncounterSystem(this.enemySpawner);
+    this.encounters.bindEnvironmentSystem(this.environment);
     this.encounters.start();
 
     this.encounterText = this.add
@@ -112,7 +118,7 @@ export class RunScene extends Phaser.Scene {
     });
 
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.7 (Encounters)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.8 (Environment)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',

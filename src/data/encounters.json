@@ -4,6 +4,7 @@
     "name": "Travel",
     "durationSec": 30,
     "spawnIntervalSec": 1.5,
+    "biome": "forest",
     "pool": { "scout": 4, "runner": 1 }
   },
   "swarm": {
@@ -11,6 +12,7 @@
     "name": "Swarm",
     "durationSec": 20,
     "spawnIntervalSec": 0.7,
+    "biome": "swamp",
     "pool": { "scout": 3, "runner": 2, "suicide-bomber": 1 }
   },
   "mini-boss": {
@@ -18,6 +20,7 @@
     "name": "Mini-boss",
     "durationSec": 25,
     "spawnIntervalSec": 2.5,
+    "biome": "sand",
     "pool": { "bruiser": 2, "scout": 1, "shooter": 1 }
   },
   "boss": {
@@ -25,6 +28,7 @@
     "name": "Boss — Veil Hauler",
     "durationSec": 60,
     "spawnIntervalSec": 4.0,
+    "biome": "snow",
     "pool": { "scout": 1, "runner": 1 },
     "spawnAtStart": ["veil-hauler"]
   }

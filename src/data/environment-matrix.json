@@ -1,0 +1,37 @@
+{
+  "kinetic": {
+    "rock": { "effect": "crater", "damagePerSec": 0, "durationSec": 2, "color": "#806040" },
+    "forest": { "effect": "splinter", "damagePerSec": 1, "durationSec": 1.5, "color": "#608040" },
+    "sand": { "effect": "dust-cloud", "damagePerSec": 0, "durationSec": 2.5, "color": "#a08850" },
+    "swamp": { "effect": "mud-splash", "damagePerSec": 0, "durationSec": 1, "color": "#4a5840" },
+    "snow": { "effect": "snow-scatter", "damagePerSec": 0, "durationSec": 1, "color": "#a0b0c0" }
+  },
+  "fire": {
+    "rock": { "effect": "minor-heat", "damagePerSec": 1, "durationSec": 1.5, "color": "#b04020" },
+    "forest": { "effect": "wildfire", "damagePerSec": 8, "durationSec": 5, "color": "#ff6020" },
+    "sand": { "effect": "glass-shrapnel", "damagePerSec": 4, "durationSec": 2.5, "color": "#e0a040" },
+    "swamp": { "effect": "fire-suppressed", "damagePerSec": 1, "durationSec": 1, "color": "#604030" },
+    "snow": { "effect": "melt-water", "damagePerSec": 0, "durationSec": 4, "color": "#6080a0" }
+  },
+  "cryo": {
+    "rock": { "effect": "frost", "damagePerSec": 1, "durationSec": 2, "color": "#80a0c0" },
+    "forest": { "effect": "frost", "damagePerSec": 2, "durationSec": 2.5, "color": "#80a0c0" },
+    "sand": { "effect": "frost", "damagePerSec": 1, "durationSec": 2, "color": "#a0b0c0" },
+    "swamp": { "effect": "freeze-water", "damagePerSec": 3, "durationSec": 4, "color": "#a0c0e0" },
+    "snow": { "effect": "deep-freeze", "damagePerSec": 4, "durationSec": 6, "color": "#c0d0e8" }
+  },
+  "explosive": {
+    "rock": { "effect": "crater", "damagePerSec": 3, "durationSec": 2, "color": "#806040" },
+    "forest": { "effect": "tree-shrapnel", "damagePerSec": 6, "durationSec": 3, "color": "#a06030" },
+    "sand": { "effect": "glass-shrapnel", "damagePerSec": 5, "durationSec": 2.5, "color": "#e0a040" },
+    "swamp": { "effect": "mud-blast", "damagePerSec": 2, "durationSec": 2, "color": "#5a6840" },
+    "snow": { "effect": "snow-explosion", "damagePerSec": 3, "durationSec": 2, "color": "#c0d0e0" }
+  },
+  "electric": {
+    "rock": { "effect": "spark", "damagePerSec": 2, "durationSec": 1, "color": "#a0c0ff" },
+    "forest": { "effect": "spark", "damagePerSec": 2, "durationSec": 1, "color": "#a0c0ff" },
+    "sand": { "effect": "spark", "damagePerSec": 2, "durationSec": 1, "color": "#a0c0ff" },
+    "swamp": { "effect": "chain-lightning", "damagePerSec": 8, "durationSec": 2, "color": "#80f0ff" },
+    "snow": { "effect": "spark", "damagePerSec": 2, "durationSec": 1, "color": "#a0c0ff" }
+  }
+}
