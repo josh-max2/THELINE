@@ -50,6 +50,19 @@
 ## Screenshot log
 
 - `docs/screenshots/2026-05-05-phase0-baseline.png` — Vite default welcome page rendering at localhost:5173. Confirms scaffold + Playwright screenshot pipeline both work.
+- `docs/screenshots/2026-05-05-phase2-audit.png` — Re-verification screenshot post-Phaser-downgrade (Phaser 3.90.0). Identical to baseline; confirms downgrade caused no regressions.
+
+## Audit log
+
+- **2026-05-05 (post-Phase-2):** Full audit pass. Findings:
+  - ✅ git remote in sync, 4 commits on main
+  - ✅ TypeScript strict compile passes (`tsc --noEmit` exit 0)
+  - ✅ All 6 agent files have valid frontmatter (model + isolation correct)
+  - ✅ `.claude/settings.json` parses, denylist enforces DESIGN.md + git push
+  - ✅ Playwright MCP "✓ Connected"
+  - ✅ Phaser 3.90.0 installed correctly (verified via package metadata; can't `require()` from Node since Phaser is browser-only)
+  - ✅ Vite dev server runs cleanly, screenshot matches baseline
+  - ⚠️ **Caught and fixed:** `index.html` had `<title>mygame</title>` from the Vite scaffolder. Changed to `<title>THE LINE</title>`. (Build plan rewrites index.html in Phase 3.2 anyway, but title was wrong now.)
 
 ## Cost ledger (rough)
 
