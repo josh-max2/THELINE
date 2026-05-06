@@ -6,6 +6,7 @@
 import { activeUnlocks, canPurchase, type OwnedSet } from '../lib/techTreeMath';
 import type { TechUnlockTag } from '../lib/types';
 import { salvageStore } from '../lib/salvageStore';
+import { unlocksStore } from '../lib/unlocksStore';
 import type { SaveSystem } from './SaveSystem';
 
 type Listener = (owned: OwnedSet, unlocks: ReadonlySet<TechUnlockTag>) => void;
@@ -15,9 +16,11 @@ export class TechTreeSystem {
   private readonly listeners = new Set<Listener>();
   private save?: SaveSystem;
 
-  /** Hydrate from save data on init. */
+  /** Hydrate from save data on init. Also pushes to global unlocksStore so
+   * cross-scene consumers (RunScene HUD, moduleBehaviors) see the effect. */
   loadFromSave(purchasedIds: readonly string[]): void {
     this.owned = new Set(purchasedIds);
+    unlocksStore.setOwned(this.owned);
     this.notify();
   }
 
@@ -55,6 +58,7 @@ export class TechTreeSystem {
     // salvageStore.add early-returns on negative amounts; use setTotal to debit.
     salvageStore.setTotal(salvageStore.total - node.cost);
     this.owned.add(nodeId);
+    unlocksStore.setOwned(this.owned);
     if (this.save) {
       this.save.updateHubState({ purchasedTechIds: [...this.owned] });
       this.save.flushSave().catch(() => {

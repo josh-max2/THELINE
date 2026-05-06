@@ -20,6 +20,7 @@ import type { CrewSystem } from '../systems/CrewSystem';
 import type { EnvironmentSystem } from '../systems/EnvironmentSystem';
 import { composeStats, getNumStat, getStrStat, type EffectiveStats } from './composeStats';
 import { categoryToDamageType } from './zoneMath';
+import { GLOBAL_DAMAGE_BUFF_MULT, unlocksStore } from './unlocksStore';
 
 /** Per-frame context passed to every active behavior. */
 export interface BehaviorContext {
@@ -112,6 +113,16 @@ function effectiveStats(handle: AttachedModuleHandle, ctx: BehaviorContext): Eff
   if (eff < 1) {
     if (typeof stats.fireRate === 'number') stats.fireRate *= eff;
     if (typeof stats.damagePerSecond === 'number') stats.damagePerSecond *= eff;
+  }
+
+  // Tech-tree global damage buff — Task 5.3 first runtime consumer.
+  // Applies after power throttle so the buff multiplies the actual damage
+  // the player sees, not a theoretical max.
+  if (unlocksStore.has('global-damage-buff')) {
+    if (typeof stats.damage === 'number') stats.damage *= GLOBAL_DAMAGE_BUFF_MULT;
+    if (typeof stats.damagePerSecond === 'number') {
+      stats.damagePerSecond *= GLOBAL_DAMAGE_BUFF_MULT;
+    }
   }
   return stats;
 }

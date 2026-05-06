@@ -13,6 +13,7 @@ import { SlowTimeSystem } from '../systems/SlowTimeSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
 import { salvageStore } from '../lib/salvageStore';
+import { unlocksStore } from '../lib/unlocksStore';
 import { PowerPanel } from '../ui/powerPanel';
 import { CrewPanel } from '../ui/crewPanel';
 
@@ -144,9 +145,29 @@ export class RunScene extends Phaser.Scene {
 
     // SaveSystem loads existing data + restores salvageStore. Fire-and-forget;
     // the HUD will tick from "Salvage: 0" to the loaded value the moment init resolves.
+    // Also pushes purchasedTechIds → unlocksStore so tech-tree effects (e.g.
+    // global-damage-buff) apply within the first auto-fire tick.
     this.saveSystem = new SaveSystem(new LocalforageStorage());
-    void this.saveSystem.init();
+    void this.saveSystem.init().then((data) => {
+      unlocksStore.setOwned(data.hubState.purchasedTechIds);
+    });
     this.saveSystem.registerLifecycleHandlers(window, document);
+
+    // Unlocks HUD — visible-only when at least one tech owned. Subscribes so
+    // it appears on first save-load tick (since init resolves async).
+    const unlocksText = this.add
+      .text(640, 700, '', {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: '#a0d8a0',
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(100);
+    const unlocksUnsub = unlocksStore.subscribe((tags) => {
+      const list = [...tags];
+      unlocksText.setText(list.length === 0 ? '' : `Unlocks: ${list.join(', ')}`);
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => unlocksUnsub());
 
     // Abandon-run button (top-right) — returns to Hub. Phase 4.X will replace
     // with proper death/escape mechanics; v0 needs *some* way back to Hub.
