@@ -15,6 +15,15 @@ const cannonWorldY = TRAIN_CENTER_Y + slot1.y;
 
 /** Helper: navigate from Hub → Run via the Depart button. */
 async function departFromHub(page: import('@playwright/test').Page): Promise<void> {
+  // Pre-mark the first-run tutorial as seen so the modal (Task 5.7) doesn't
+  // block the DEPART button. Set BEFORE goto so HubScene reads it on enter.
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem('theline:tutorial-seen-v1', 'true');
+    } catch {
+      // happy-dom never throws, but Safari private mode might.
+    }
+  });
   await page.goto('/');
   // Click Depart to leave the Hub. Wait for the button so HubScene's DOM has rendered.
   const depart = page.locator('.hub-depart');
