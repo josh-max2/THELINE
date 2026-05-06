@@ -8,6 +8,8 @@ import { buildTokenFromUrl } from '../lib/buildShare';
 import { loadoutStore } from '../lib/loadoutStore';
 import { audioSystem } from '../systems/AudioSystem';
 import { audioStore } from '../lib/audioStore';
+import { hasSeenTutorial } from '../lib/tutorialState';
+import { TutorialOverlay } from '../ui/tutorialOverlay';
 
 /**
  * Between-run UI. Per DESIGN §10 + build plan Task 4.9 + Task 5.3.
@@ -22,6 +24,7 @@ export class HubScene extends Phaser.Scene {
   private overlay?: HubOverlay;
   private saveSystem?: SaveSystem;
   private techTree?: TechTreeSystem;
+  private tutorial?: TutorialOverlay;
 
   constructor() {
     super({ key: 'HubScene' });
@@ -76,9 +79,17 @@ export class HubScene extends Phaser.Scene {
       },
     );
 
+    // First-run tutorial — shown on top of the hub on the very first session.
+    // Subsequent enters skip it (flag persisted via localStorage in tutorialState).
+    if (!hasSeenTutorial()) {
+      this.tutorial = new TutorialOverlay(document.body);
+    }
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.overlay?.destroy();
       this.overlay = undefined;
+      this.tutorial?.destroy();
+      this.tutorial = undefined;
       void this.saveSystem?.flushSave();
       this.saveSystem = undefined;
       this.techTree = undefined;

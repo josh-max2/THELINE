@@ -364,6 +364,83 @@ body {
   color: #6a7080;
 }
 
+/* ─── Tutorial overlay (Task 5.7) ─────────────────────────────────────── */
+
+.tutorial-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(5, 8, 14, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tutorial-modal {
+  background: rgba(15, 22, 36, 0.99);
+  border: 1px solid #4a90d8;
+  border-radius: 6px;
+  padding: 24px 32px;
+  width: min(640px, 90vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  color: #c0d0e0;
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.tutorial-heading {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #e0eafa;
+  text-align: center;
+}
+.tutorial-sub {
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 18px;
+  color: #80a0c0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.tutorial-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.tutorial-item {
+  background: rgba(20, 30, 50, 0.5);
+  border: 1px solid #233a5a;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+.tutorial-item-title {
+  font-weight: 700;
+  color: #e0eafa;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.tutorial-item-body {
+  margin: 0;
+  font-size: 11px;
+  color: #8aa0c0;
+  line-height: 1.5;
+}
+.tutorial-ok {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 24px;
+  background: #4a90d8;
+  border: none;
+  border-radius: 3px;
+  color: #05070b;
+  font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+}
+.tutorial-ok:hover {
+  background: #6ab0f8;
+}
+
 /* "Abandon" button rendered above the canvas during Run. */
 .run-abandon {
   position: fixed;
