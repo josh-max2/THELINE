@@ -13,9 +13,20 @@ const slot1 = cars.engine.slots.find((s) => s.id === 'engine-top-1')!;
 const cannonWorldX = TRAIN_ANCHOR_X + slot1.x;
 const cannonWorldY = TRAIN_CENTER_Y + slot1.y;
 
+/** Helper: navigate from Hub → Run via the Depart button. */
+async function departFromHub(page: import('@playwright/test').Page): Promise<void> {
+  await page.goto('/');
+  // Click Depart to leave the Hub. Wait for the button so HubScene's DOM has rendered.
+  const depart = page.locator('.hub-depart');
+  await depart.waitFor({ state: 'visible', timeout: 10_000 });
+  await depart.click();
+  // Hub overlay disappears once RunScene starts.
+  await depart.waitFor({ state: 'detached', timeout: 5_000 });
+}
+
 test.describe('Phase 3 / Tasks 3.3–3.5 — train + module + combat', () => {
   test('canvas is present and produces non-empty pixel data after 2 seconds', async ({ page }) => {
-    await page.goto('/');
+    await departFromHub(page);
 
     const canvas = page.locator('canvas').first();
     await expect(canvas).toBeVisible();
@@ -62,7 +73,7 @@ test.describe('Phase 3 / Tasks 3.3–3.5 — train + module + combat', () => {
   });
 
   test('combat loop produces salvage within 7 seconds (Task 3.5)', async ({ page }) => {
-    await page.goto('/');
+    await departFromHub(page);
     // Wait long enough for: first scout spawn (~1.5s) + travel-to-train + cannon fire + projectile travel.
     await page.waitForTimeout(7000);
 
@@ -72,7 +83,7 @@ test.describe('Phase 3 / Tasks 3.3–3.5 — train + module + combat', () => {
   });
 
   test('salvage persists across page reload (Task 3.6)', async ({ page }) => {
-    await page.goto('/');
+    await departFromHub(page);
     await page.waitForTimeout(6000);
 
     const beforeReload = await page.evaluate(() => window.__salvage?.total);
@@ -87,7 +98,13 @@ test.describe('Phase 3 / Tasks 3.3–3.5 — train + module + combat', () => {
     await page.waitForTimeout(300);
 
     await page.reload();
-    // Wait for SaveSystem.init() to load + restore. Init is async; let it settle.
+    // Reload returns to Hub. Salvage is restored to the Hub's display via SaveSystem.init.
+    // Re-depart to verify it carries into the Run.
+    const depart = page.locator('.hub-depart');
+    await depart.waitFor({ state: 'visible', timeout: 10_000 });
+    await depart.click();
+    await depart.waitFor({ state: 'detached', timeout: 5_000 });
+    // Wait for SaveSystem.init() to load + restore.
     await page.waitForTimeout(1500);
 
     const afterReload = await page.evaluate(() => window.__salvage?.total);

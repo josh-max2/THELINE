@@ -12,5 +12,5 @@ export const gameConfigBase = {
   backgroundColor: '#0a0d14',
 } as const;
 
-export const sceneOrder = ['BootScene', 'RunScene'] as const;
+export const sceneOrder = ['BootScene', 'HubScene', 'RunScene', 'DeathScene'] as const;
 export type SceneName = (typeof sceneOrder)[number];

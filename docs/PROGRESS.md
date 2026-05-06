@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 4 Task 4.2.1 complete — runtime item composition working)
-> Build phase: 4 (core systems — Tasks 4.1, 4.1.1, 4.2, 4.2.1 done)
+> Last updated: 2026-05-05 by claude (Phase 4 marathon — Tasks 4.3 → 4.9 in single session)
+> Build phase: 4 (core systems — only 4.10 left)
 > v1 ETA: 2026-07-15
 
 ## Current build status
@@ -10,8 +10,7 @@
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
-- Phase 4 core systems: 🚧 (4.1 ✅, 4.1.1 ✅, 4.2 ✅, 4.2.1 ✅, 4.3 ✅, 4.4 ✅, 4.5 ✅, 4.6 ✅, 4.7 ✅, 4.8 next — Environmental matrix)
-- Phase 4 core systems: ⏳
+- Phase 4 core systems: 🚧 (4.1–4.9 ✅, 4.10 next — Save v2)
 - Phase 5 content + polish: ⏳
 - Phase 6 launch prep: ⏳
 

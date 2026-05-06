@@ -6,7 +6,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    // No assets to preload yet. Hand straight off to the run scene.
-    this.scene.start('RunScene');
+    // No assets to preload yet. Hand off to the Hub (Task 4.9).
+    this.scene.start('HubScene');
   }
 }

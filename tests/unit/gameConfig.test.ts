@@ -17,7 +17,17 @@ describe('gameConfigBase (pure data — no Phaser import at test time)', () => {
 });
 
 describe('sceneOrder', () => {
-  test('Boot precedes Run', () => {
-    expect(sceneOrder).toEqual(['BootScene', 'RunScene']);
+  test('Boot → Hub → Run → Death (Task 4.9)', () => {
+    expect(sceneOrder).toEqual(['BootScene', 'HubScene', 'RunScene', 'DeathScene']);
+  });
+
+  test('BootScene is first (entry point)', () => {
+    expect(sceneOrder[0]).toBe('BootScene');
+  });
+
+  test('HubScene precedes RunScene (Hub → Run flow)', () => {
+    const hubIdx = sceneOrder.indexOf('HubScene');
+    const runIdx = sceneOrder.indexOf('RunScene');
+    expect(hubIdx).toBeLessThan(runIdx);
   });
 });

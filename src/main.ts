@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { gameConfigBase } from './lib/gameConfig';
 import { BootScene } from './scenes/BootScene';
+import { HubScene } from './scenes/HubScene';
 import { RunScene } from './scenes/RunScene';
+import { DeathScene } from './scenes/DeathScene';
 import { salvageStore } from './lib/salvageStore';
 import './style.css';
 
@@ -20,7 +22,7 @@ Object.defineProperty(window, '__salvage', {
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   ...gameConfigBase,
-  scene: [BootScene, RunScene],
+  scene: [BootScene, HubScene, RunScene, DeathScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

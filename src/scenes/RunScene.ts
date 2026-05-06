@@ -153,6 +153,16 @@ export class RunScene extends Phaser.Scene {
     void this.saveSystem.init();
     this.saveSystem.registerLifecycleHandlers(window, document);
 
+    // Abandon-run button (top-right) — returns to Hub. Phase 4.X will replace
+    // with proper death/escape mechanics; v0 needs *some* way back to Hub.
+    const abandonBtn = document.createElement('button');
+    abandonBtn.className = 'run-abandon';
+    abandonBtn.textContent = 'Abandon Run';
+    abandonBtn.addEventListener('click', () => {
+      this.scene.start('HubScene');
+    });
+    document.body.appendChild(abandonBtn);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribeSalvage?.();
       this.unsubscribeEncounters?.();
@@ -161,6 +171,7 @@ export class RunScene extends Phaser.Scene {
       this.powerPanel.destroy();
       this.crewPanel.destroy();
       this.slowTime.destroy();
+      abandonBtn.remove();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });
