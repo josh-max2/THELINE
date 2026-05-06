@@ -1,5 +1,5 @@
 {
-  "name": "mygame",
+  "name": "the-line",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "localforage": "^1.10.0",
-    "phaser": "^4.1.0",
+    "phaser": "^3.90.0",
     "zustand": "^5.0.13"
   }
 }
