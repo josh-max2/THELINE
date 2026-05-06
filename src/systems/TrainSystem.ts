@@ -3,6 +3,7 @@ import carsDataRaw from '../data/cars.json';
 import type { CarData, CarType } from '../lib/types';
 import { drawRecipe } from '../lib/drawRecipe';
 import { computeCarPositions, TRAIN_ANCHOR_X, TRAIN_CENTER_Y, CAR_GAP } from '../lib/trainLayout';
+import { canAddCar } from '../lib/trainValidators';
 
 const CARS = carsDataRaw as Record<CarType, CarData>;
 
@@ -35,14 +36,9 @@ export class TrainSystem {
     if (!data) {
       throw new Error(`Unknown car type: ${type}`);
     }
-    if (type === 'engine' && this.cars.some((c) => c.type === 'engine')) {
-      throw new Error('Only one Engine allowed in v1 (ADR-001 Gap 4).');
-    }
-    if (this.cars.length === 0 && type !== 'engine') {
-      throw new Error('First car must be the Engine (ADR-001 Gap 4).');
-    }
-    if (this.cars.length >= 8) {
-      throw new Error('v1 train length capped at 8 cars (DESIGN §4).');
+    const validation = canAddCar(this.cars, type);
+    if (!validation.ok) {
+      throw new Error(validation.reason);
     }
 
     const footprints = [...this.cars.map((c) => ({ width: c.data.width })), { width: data.width }];
