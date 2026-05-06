@@ -86,6 +86,7 @@
     "hp": 300,
     "width": 96,
     "height": 56,
+    "crewSlots": 4,
     "slots": [
       { "id": "crew-top-1", "type": "top", "x": 0, "y": -36 }
     ],

@@ -1,5 +1,6 @@
 import type { TrainSystem } from './TrainSystem';
 import type { ModuleAttachmentSystem } from './ModuleAttachmentSystem';
+import type { CrewSystem } from './CrewSystem';
 import { computeAllocations, type PowerAllocation } from '../lib/powerMath';
 
 /**
@@ -19,10 +20,16 @@ export class PowerSystem {
   private readonly weights = new Map<number, number>();
   private readonly listeners = new Set<(allocations: ReadonlyArray<PowerAllocation>) => void>();
   private cachedAllocations: PowerAllocation[] = [];
+  private crew?: CrewSystem;
 
   constructor(train: TrainSystem, modules: ModuleAttachmentSystem) {
     this.train = train;
     this.modules = modules;
+  }
+
+  /** Wire CrewSystem so generation() can apply Engine-crew bonuses. */
+  bindCrewSystem(crew: CrewSystem): void {
+    this.crew = crew;
   }
 
   /** Adjust car weight (0..MAX_POWER_WEIGHT). Triggers recompute + notify. */
@@ -64,13 +71,14 @@ export class PowerSystem {
     return this.cachedAllocations;
   }
 
-  /** Total power generation across the train (sum of car powerGens). */
+  /** Total power generation across the train (sum of car powerGens × engine-crew bonus). */
   generation(): number {
     let gen = 0;
     for (let i = 0; i < this.train.length; i++) {
       const car = this.train.getCar(i);
       if (car?.data.powerGen) gen += car.data.powerGen;
     }
+    if (this.crew) gen *= this.crew.engineGenerationMultiplier();
     return gen;
   }
 

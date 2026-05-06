@@ -16,6 +16,7 @@ import type { TrainSystem } from '../systems/TrainSystem';
 import type { CombatSystem } from '../systems/CombatSystem';
 import type { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
 import type { PowerSystem } from '../systems/PowerSystem';
+import type { CrewSystem } from '../systems/CrewSystem';
 import { composeStats, getNumStat, getStrStat, type EffectiveStats } from './composeStats';
 
 /** Per-frame context passed to every active behavior. */
@@ -25,6 +26,7 @@ export interface BehaviorContext {
   combat: CombatSystem;
   items: ItemAttachmentSystem;
   power: PowerSystem;
+  crew: CrewSystem;
 }
 
 /** A live attachment as the registry sees it. */
@@ -82,16 +84,27 @@ function turretWorldPos(
 }
 
 /**
- * Compose effective stats for a turret: base behavior data ⊕ stacked items
- * ⊕ power efficiency multiplier on rate-style stats.
- * Per ADR-002 (item composition) and Task 4.3 (power).
+ * Compose effective stats for a turret in a defined order:
+ *   1. base behavior data
+ *   2. stacked items (Task 4.2.1)
+ *   3. crew fire-rate buff (Task 4.4)
+ *   4. power efficiency throttle (Task 4.3)
+ * Order is multiplicative-commutative for our current ops, so the layering
+ * is for readability rather than determinism.
  */
 function effectiveStats(handle: AttachedModuleHandle, ctx: BehaviorContext): EffectiveStats {
   const stats = composeStats(handle.data.behavior, ctx.items.itemsAt(handle.qualifiedSlotId));
-  // Apply power efficiency to rate-style stats (firing slows under low power).
   const colon = handle.qualifiedSlotId.indexOf(':');
   if (colon < 0) return stats;
   const carIndex = Number(handle.qualifiedSlotId.slice(0, colon));
+
+  // Crew buff applies to fireRate (DESIGN §7).
+  const crewMult = ctx.crew.fireRateBoostAt(carIndex);
+  if (crewMult !== 1 && typeof stats.fireRate === 'number') {
+    stats.fireRate *= crewMult;
+  }
+
+  // Power efficiency throttles rate-style stats when supply < demand.
   const eff = ctx.power.efficiencyAt(carIndex);
   if (eff < 1) {
     if (typeof stats.fireRate === 'number') stats.fireRate *= eff;

@@ -49,7 +49,28 @@ export interface CarData {
   render: RenderRecipe;
   /** Power generated per second. Engine has this in v1; v2 may add Reactor cars. */
   powerGen?: number;
+  /** Number of crew slots this car physically holds. Crew Car has this in v1. */
+  crewSlots?: number;
 }
+
+// ─── Crew (per Task 4.4 + DESIGN §7) ──────────────────────────────────────
+
+export interface CrewMember {
+  id: number;
+  /** Color for the crew dot in the UI. */
+  color: string;
+}
+
+/** v0 fixed roster — Phase 5 introduces named crew with specialties. */
+export const DEFAULT_CREW: CrewMember[] = [
+  { id: 0, color: '#e08040' },
+  { id: 1, color: '#40a0e0' },
+  { id: 2, color: '#80c060' },
+  { id: 3, color: '#d8c040' },
+];
+
+export const CREW_FIRE_RATE_BUFF = 1.5; // ×1.5 if any crew on a Weapon Car (DESIGN §7).
+export const CREW_ENGINE_POWER_BUFF_PER = 0.1; // +10% powerGen per crew on Engine.
 
 // ─── Modules ───────────────────────────────────────────────────────────────
 

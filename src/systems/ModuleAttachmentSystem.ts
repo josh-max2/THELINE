@@ -11,6 +11,7 @@ import type { TrainSystem } from './TrainSystem';
 import type { CombatSystem } from './CombatSystem';
 import type { ItemAttachmentSystem } from './ItemAttachmentSystem';
 import type { PowerSystem } from './PowerSystem';
+import type { CrewSystem } from './CrewSystem';
 
 const MODULES = modulesDataRaw as unknown as Record<string, ModuleData>;
 
@@ -35,6 +36,7 @@ export class ModuleAttachmentSystem {
   private readonly phaserAttachments = new Map<string, PhaserAttachment>();
   private items?: ItemAttachmentSystem;
   private power?: PowerSystem;
+  private crew?: CrewSystem;
 
   constructor(scene: Phaser.Scene, train: TrainSystem, combat: CombatSystem) {
     this.scene = scene;
@@ -50,6 +52,11 @@ export class ModuleAttachmentSystem {
   /** Wire the PowerSystem so behavior handlers can read efficiency. */
   bindPowerSystem(power: PowerSystem): void {
     this.power = power;
+  }
+
+  /** Wire the CrewSystem so behavior handlers can read crew buffs. */
+  bindCrewSystem(crew: CrewSystem): void {
+    this.crew = crew;
   }
 
   /** Read the turret data at a qualified slot. Used by IAS during attach validation. */
@@ -171,12 +178,16 @@ export class ModuleAttachmentSystem {
     if (!this.power) {
       throw new Error('ModuleAttachmentSystem.bindPowerSystem(...) must be called before update()');
     }
+    if (!this.crew) {
+      throw new Error('ModuleAttachmentSystem.bindCrewSystem(...) must be called before update()');
+    }
     return {
       scene: this.scene,
       train: this.train,
       combat: this.combat,
       items: this.items,
       power: this.power,
+      crew: this.crew,
     };
   }
 }

@@ -6,10 +6,12 @@ import { EnemySpawner } from '../systems/EnemySpawner';
 import { CombatSystem } from '../systems/CombatSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { PowerSystem } from '../systems/PowerSystem';
+import { CrewSystem } from '../systems/CrewSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
 import { salvageStore } from '../lib/salvageStore';
 import { PowerPanel } from '../ui/powerPanel';
+import { CrewPanel } from '../ui/crewPanel';
 
 /** Per ADR-001 §Gap 2 — world scrolls past the static train at this rate. */
 export const WORLD_VELOCITY_PX_PER_SEC = 50;
@@ -23,6 +25,8 @@ export class RunScene extends Phaser.Scene {
   private saveSystem!: SaveSystem;
   private powerSystem!: PowerSystem;
   private powerPanel!: PowerPanel;
+  private crewSystem!: CrewSystem;
+  private crewPanel!: CrewPanel;
   private parallax!: ParallaxBackground;
   private salvageText!: Phaser.GameObjects.Text;
   private unsubscribeSalvage?: () => void;
@@ -49,11 +53,14 @@ export class RunScene extends Phaser.Scene {
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
     this.itemSystem = new ItemAttachmentSystem(this, this.trainSystem);
     this.powerSystem = new PowerSystem(this.trainSystem, this.moduleSystem);
+    this.crewSystem = new CrewSystem(this.trainSystem);
 
-    // Resolve the IAS↔MAS reference cycle + bind PowerSystem.
+    // Resolve cross-system references.
     this.moduleSystem.bindItemSystem(this.itemSystem);
     this.moduleSystem.bindPowerSystem(this.powerSystem);
+    this.moduleSystem.bindCrewSystem(this.crewSystem);
     this.itemSystem.bindModuleSystem(this.moduleSystem);
+    this.powerSystem.bindCrewSystem(this.crewSystem);
 
     // Phase 4 Task 4.2: showcase 8 of 10 turrets across the 4 archetypes.
     this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');   // kinetic auto-fire
@@ -74,8 +81,12 @@ export class RunScene extends Phaser.Scene {
     this.powerSystem.initializeDefaults();
     this.powerPanel = new PowerPanel(document.body, this.trainSystem, this.powerSystem);
 
+    // Crew assignments default-to-Crew-Car; CrewPanel renders the assignment UI.
+    this.crewSystem.initializeDefaults();
+    this.crewPanel = new CrewPanel(document.body, this.trainSystem, this.crewSystem);
+
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.3 (Power)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.4 (Crew)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -115,6 +126,7 @@ export class RunScene extends Phaser.Scene {
       this.moduleSystem.destroyAll();
       this.itemSystem.destroyAll();
       this.powerPanel.destroy();
+      this.crewPanel.destroy();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });
