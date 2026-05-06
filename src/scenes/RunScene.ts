@@ -137,8 +137,12 @@ export class RunScene extends Phaser.Scene {
       )
       .setDepth(100);
 
+    // Salvage HUD: top-right, but anchored left of the DOM "Abandon Run" +
+    // "Copy Build URL" buttons (~120px wide stacked at top-right). Anchoring
+    // at x=1140 right-aligned keeps it readable even with the canvas at full
+    // 1280px (Task 5.4 visual fix — the prior x=1264 collided with the buttons).
     this.salvageText = this.add
-      .text(1264, 16, 'Salvage: 0', {
+      .text(1140, 16, 'Salvage: 0', {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#e8eef7',
