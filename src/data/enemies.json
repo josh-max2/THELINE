@@ -6,12 +6,118 @@
     "speed": 80,
     "damage": 5,
     "radius": 9,
+    "behavior": "tracker",
     "render": {
       "fill": "#c44848",
       "stroke": "#5a1818",
       "strokeWidth": 1,
       "shapes": [
         { "kind": "tri", "points": [[0, -9], [-8, 7], [8, 7]] }
+      ]
+    }
+  },
+  "bruiser": {
+    "id": "bruiser",
+    "name": "Bruiser",
+    "hp": 40,
+    "speed": 35,
+    "damage": 18,
+    "radius": 16,
+    "behavior": "tracker",
+    "render": {
+      "fill": "#8a4a30",
+      "stroke": "#3a1a08",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "rect", "x": -14, "y": -12, "w": 28, "h": 24 },
+        { "kind": "circle", "x": -8, "y": 8, "r": 4, "fill": "#3a1a08" },
+        { "kind": "circle", "x": 8, "y": 8, "r": 4, "fill": "#3a1a08" },
+        { "kind": "rect", "x": -10, "y": -8, "w": 20, "h": 4, "fill": "#c87060" }
+      ]
+    }
+  },
+  "runner": {
+    "id": "runner",
+    "name": "Runner",
+    "hp": 5,
+    "speed": 160,
+    "damage": 3,
+    "radius": 6,
+    "behavior": "tracker",
+    "render": {
+      "fill": "#e0a040",
+      "stroke": "#603020",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "tri", "points": [[0, -7], [-5, 4], [5, 4]] },
+        { "kind": "tri", "points": [[-5, 4], [-7, 8], [-2, 8]], "fill": "#a07020" },
+        { "kind": "tri", "points": [[5, 4], [2, 8], [7, 8]], "fill": "#a07020" }
+      ]
+    }
+  },
+  "shooter": {
+    "id": "shooter",
+    "name": "Shooter",
+    "hp": 15,
+    "speed": 50,
+    "damage": 6,
+    "radius": 11,
+    "behavior": "ranged",
+    "render": {
+      "fill": "#406088",
+      "stroke": "#101830",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -10, "y": -8, "w": 20, "h": 16 },
+        { "kind": "rect", "x": 4, "y": -2, "w": 12, "h": 4, "fill": "#80a8d0" },
+        { "kind": "circle", "x": -3, "y": 0, "r": 3, "fill": "#a0c8f0" }
+      ]
+    }
+  },
+  "suicide-bomber": {
+    "id": "suicide-bomber",
+    "name": "Suicide Bomber",
+    "hp": 12,
+    "speed": 90,
+    "damage": 35,
+    "radius": 12,
+    "behavior": "suicide",
+    "render": {
+      "fill": "#a02020",
+      "stroke": "#400808",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "circle", "x": 0, "y": 0, "r": 11 },
+        { "kind": "circle", "x": 0, "y": 0, "r": 5, "fill": "#ffa040" },
+        { "kind": "rect", "x": -1, "y": -16, "w": 2, "h": 6, "fill": "#603030" }
+      ]
+    }
+  },
+  "veil-hauler": {
+    "id": "veil-hauler",
+    "name": "Veil Hauler",
+    "hp": 400,
+    "speed": 24,
+    "damage": 50,
+    "radius": 36,
+    "behavior": "boss",
+    "isBoss": true,
+    "phases": [
+      { "hpRatio": 0.66, "tint": "#a040c0", "speedMult": 1.0 },
+      { "hpRatio": 0.33, "tint": "#c060e0", "speedMult": 1.5 },
+      { "hpRatio": 0.0, "tint": "#e080ff", "speedMult": 2.0 }
+    ],
+    "render": {
+      "fill": "#5a3070",
+      "stroke": "#1a0a28",
+      "strokeWidth": 3,
+      "shapes": [
+        { "kind": "circle", "x": 0, "y": 0, "r": 32 },
+        { "kind": "circle", "x": 0, "y": 0, "r": 22, "fill": "#7a4090" },
+        { "kind": "circle", "x": 0, "y": 0, "r": 12, "fill": "#a050c0" },
+        { "kind": "circle", "x": 0, "y": 0, "r": 5, "fill": "#ffe0ff" },
+        { "kind": "rect", "x": -36, "y": -2, "w": 14, "h": 4, "fill": "#3a1858" },
+        { "kind": "rect", "x": 22, "y": -2, "w": 14, "h": 4, "fill": "#3a1858" }
       ]
     }
   }

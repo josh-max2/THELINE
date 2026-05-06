@@ -90,7 +90,7 @@ export class RunScene extends Phaser.Scene {
     this.slowTime = new SlowTimeSystem(this);
 
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.5 (Slow-time)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.6 (Enemies)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',

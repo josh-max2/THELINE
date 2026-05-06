@@ -10,7 +10,7 @@
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
-- Phase 4 core systems: 🚧 (4.1 ✅, 4.1.1 ✅, 4.2 ✅, 4.2.1 ✅, 4.3 ✅, 4.4 ✅, 4.5 ✅, 4.6 next — 5 enemies + boss)
+- Phase 4 core systems: 🚧 (4.1 ✅, 4.1.1 ✅, 4.2 ✅, 4.2.1 ✅, 4.3 ✅, 4.4 ✅, 4.5 ✅, 4.6 ✅, 4.7 next — Encounter grammar)
 - Phase 4 core systems: ⏳
 - Phase 5 content + polish: ⏳
 - Phase 6 launch prep: ⏳
@@ -19,6 +19,7 @@
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.6: 5 enemies + boss.** enemies.json expanded from 1→6: scout (existing) + bruiser (slow tank, 40 HP), runner (fast glass cannon, 5 HP, 160 px/sec), shooter (ranged behavior tag), suicide-bomber (red sphere with fuse), Veil Hauler boss (3-phase, 400 HP, 36 radius). types.ts: EnemyData gains `behavior?: EnemyBehaviorKind`, `isBoss?`, `phases?: BossPhaseSpec[]`. Pure helpers: `bossPhases.ts` (currentPhaseIndex/currentPhase by HP ratio, sorted high-to-low) + `enemyPool.ts` (weighted pickFromPool with deterministic-rng tests). EnemySpawner picks from defaultEnemyPool() (equal-weight non-boss); boss spawning deferred to Phase 4.7 encounter grammar. v0: all enemies use tracker movement (move toward train). Ranged/suicide-specific behaviors stubbed in JSON tag; Phase 4.X+ wires car damage and the bomber explodes / shooter fires back. **Caught in flight:** my first import-edit pattern didn't match — fixed via re-Read + targeted Edit. **183/183 unit pass** (+12: bossPhases 6 + enemyPool 6), **3/3 E2E pass**. Visual confirms suicide-bomber + others spawning. | 183 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.5: Slow-time pause.** Pure `slowTimeMath.ts` (NORMAL/SLOW constants, timeScaleFor, lerpAlpha) + `SlowTimeSystem.ts` (Phaser keyboard listener on SPACE, blue-tint full-screen overlay graphic that lerps in/out 0.18 alpha). RunScene.update() splits dt: gameplay systems get `realDt × timeScale` (Bastion-style 25% during slow); SaveSystem.update gets real dt (auto-save shouldn't lag at 30s wall-clock when paused). Visual: `0x4070b0` overlay fades in over ~5 frames when SPACE down. **171/171 unit pass** (+10 slowTimeMath), **3/3 E2E pass**, TS strict. | 171 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.4: Crew slot system.** Pure `crewMath.ts` (fireRateMultiplier, enginePowerGenMultiplier, validateAssignment, crewCountAt) + `CrewSystem.ts` (Phaser-aware, manages 4 default crew, subscribe/notify) + DOM `crewPanel.ts` (top-left, color-coded dots + dropdowns). Crew on Weapon Car → ×1.5 fireRate (single flat buff per build plan). Crew on Engine → +10% powerGen per crew (linear, no cap → 4 crew = ×1.4 generation). Cars.json: Crew Car gets `crewSlots: 4`. types.ts: DEFAULT_CREW (4 members, primary colors), CREW_FIRE_RATE_BUFF=1.5, CREW_ENGINE_POWER_BUFF_PER=0.1. BehaviorContext gains `crew: CrewSystem`; effectiveStats applies crew buff before power throttle (multiplicative-commutative). PowerSystem.bindCrewSystem allows generation() to multiply by crew bonus. **Caught in flight:** I added `bindCrewSystem` to RunScene before adding it to MAS — TS compile caught it; fixed in same task. **161/161 unit pass** (+14 crewMath), **3/3 E2E pass**. | 161 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.3: PowerSystem with FTL UI.** Pure `powerMath.ts` (computeAllocations, efficiency math, MAX_POWER_WEIGHT=10) + `PowerSystem.ts` (Phaser-aware, owns weights, queries MAS for demand, exposes `efficiencyAt(carIndex)` for handlers, subscribe/notify pattern) + DOM `powerPanel.ts` (vanilla CSS-styled fixed-position bottom-left, sliders + supply/demand/efficiency readouts, low-efficiency cars colored orange). modules.json gained `power` field per behavior (1-2 each, total demand = 10 at default 8-turret attach). cars.json: Engine gets `powerGen: 10`. BehaviorContext extended with `power: PowerSystem`; `effectiveStats` multiplies fireRate/damagePerSecond by efficiency for graceful degradation. Engine included in allocation panel (its turrets compete with the rest of the train — real tradeoff). Visual: 4 sliders, "POWER 10.0/10" header, Weapon Car at 63% efficiency (orange) under default equal weights — perfect FTL feel. **147/147 unit pass** (+13 powerMath), **3/3 E2E pass**, TS strict. | 147 unit ✅ · 3 E2E ✅ |
@@ -41,8 +42,8 @@
 
 ## Next priorities (queue, ordered) — Phase 4 in progress
 
-1. **READY** — Phase 4 Task 4.6: 5 enemy types + 1 boss per build plan + DESIGN §3.5. Add 4 more enemies (bruiser, runner, shooter, suicide-bomber) and 1 boss (Veil Hauler with 3 phases). Per-type AI behavior. Distinct geometric silhouettes.
-2. **(continues per build plan — Tasks 4.7 encounters, 4.8 environment matrix, 4.9 hub, 4.10 save v2)**
+1. **READY** — Phase 4 Task 4.7: Encounter grammar per DESIGN §9. encounters.json templates (travel/swarm/mini-boss/boss) with enemy compositions, durations, spawn pacing. Run flow loops `travel → swarm → travel → mini-boss → travel → boss`. Pacing 50/25/15/10. Top-of-screen indicator (e.g., "Travel — 90s remaining").
+2. **(continues per build plan — Tasks 4.8 environment matrix, 4.9 hub, 4.10 save v2)**
 
 ## Open questions for human (Josh)
 

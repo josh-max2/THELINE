@@ -169,15 +169,32 @@ export function qualifySlot(carIndex: number, slotId: string): QualifiedSlotId {
 
 // ─── Enemies ───────────────────────────────────────────────────────────────
 
+export type EnemyBehaviorKind = 'tracker' | 'ranged' | 'suicide' | 'boss';
+
+export interface BossPhaseSpec {
+  /** Phase active when hpRatio >= this value (largest threshold first). */
+  hpRatio: number;
+  /** Tint overlaid on base render at this phase. */
+  tint?: string;
+  /** Multiplier on base speed at this phase. */
+  speedMult?: number;
+}
+
 export interface EnemyData {
   id: string;
   name: string;
   hp: number;
   /** World units per second toward target. */
   speed: number;
-  /** Damage dealt to train on contact (Phase 4 hooks it up). */
+  /** Damage dealt to train on contact (Phase 4.X hooks it up). */
   damage: number;
   /** Approximate collision radius for projectile hit detection. */
   radius: number;
   render: RenderRecipe;
+  /** AI behavior tag — Phase 4.X+ uses this for damage-back-to-train logic. */
+  behavior?: EnemyBehaviorKind;
+  /** Marks this enemy as a boss — EnemySpawner skips it from regular spawns. */
+  isBoss?: boolean;
+  /** Boss phase progression (highest hpRatio first). */
+  phases?: BossPhaseSpec[];
 }
