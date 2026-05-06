@@ -1,0 +1,31 @@
+{
+  "travel": {
+    "kind": "travel",
+    "name": "Travel",
+    "durationSec": 30,
+    "spawnIntervalSec": 1.5,
+    "pool": { "scout": 4, "runner": 1 }
+  },
+  "swarm": {
+    "kind": "swarm",
+    "name": "Swarm",
+    "durationSec": 20,
+    "spawnIntervalSec": 0.7,
+    "pool": { "scout": 3, "runner": 2, "suicide-bomber": 1 }
+  },
+  "mini-boss": {
+    "kind": "mini-boss",
+    "name": "Mini-boss",
+    "durationSec": 25,
+    "spawnIntervalSec": 2.5,
+    "pool": { "bruiser": 2, "scout": 1, "shooter": 1 }
+  },
+  "boss": {
+    "kind": "boss",
+    "name": "Boss — Veil Hauler",
+    "durationSec": 60,
+    "spawnIntervalSec": 4.0,
+    "pool": { "scout": 1, "runner": 1 },
+    "spawnAtStart": ["veil-hauler"]
+  }
+}

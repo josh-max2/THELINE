@@ -171,6 +171,23 @@ export function qualifySlot(carIndex: number, slotId: string): QualifiedSlotId {
 
 export type EnemyBehaviorKind = 'tracker' | 'ranged' | 'suicide' | 'boss';
 
+// ─── Encounters (per DESIGN §9 + Task 4.7) ────────────────────────────────
+
+export type EncounterKind = 'travel' | 'swarm' | 'mini-boss' | 'boss';
+
+export interface EncounterTemplate {
+  kind: EncounterKind;
+  /** Display name for the HUD, e.g. "Travel". */
+  name: string;
+  durationSec: number;
+  /** Enemy id → weight for the spawner pool during this encounter. */
+  pool: Record<string, number>;
+  /** Spawner tick interval in seconds. */
+  spawnIntervalSec: number;
+  /** Enemies spawned immediately when the encounter activates (e.g. boss). */
+  spawnAtStart?: string[];
+}
+
 export interface BossPhaseSpec {
   /** Phase active when hpRatio >= this value (largest threshold first). */
   hpRatio: number;

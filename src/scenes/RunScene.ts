@@ -7,6 +7,7 @@ import { CombatSystem } from '../systems/CombatSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { PowerSystem } from '../systems/PowerSystem';
 import { CrewSystem } from '../systems/CrewSystem';
+import { EncounterSystem } from '../systems/EncounterSystem';
 import { SlowTimeSystem } from '../systems/SlowTimeSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
@@ -29,6 +30,9 @@ export class RunScene extends Phaser.Scene {
   private crewSystem!: CrewSystem;
   private crewPanel!: CrewPanel;
   private slowTime!: SlowTimeSystem;
+  private encounters!: EncounterSystem;
+  private encounterText!: Phaser.GameObjects.Text;
+  private unsubscribeEncounters?: () => void;
   private parallax!: ParallaxBackground;
   private salvageText!: Phaser.GameObjects.Text;
   private unsubscribeSalvage?: () => void;
@@ -89,8 +93,26 @@ export class RunScene extends Phaser.Scene {
 
     this.slowTime = new SlowTimeSystem(this);
 
+    // Encounter cycle drives EnemySpawner per template.
+    this.encounters = new EncounterSystem(this.enemySpawner);
+    this.encounters.start();
+
+    this.encounterText = this.add
+      .text(640, 20, '', {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#e0eafa',
+        backgroundColor: 'rgba(10, 18, 32, 0.7)',
+        padding: { x: 8, y: 4 },
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(100);
+    this.unsubscribeEncounters = this.encounters.subscribe((enc, sec) => {
+      this.encounterText.setText(`${enc.name} — ${sec.toFixed(0)}s`);
+    });
+
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.6 (Enemies)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.7 (Encounters)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -127,6 +149,7 @@ export class RunScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribeSalvage?.();
+      this.unsubscribeEncounters?.();
       this.moduleSystem.destroyAll();
       this.itemSystem.destroyAll();
       this.powerPanel.destroy();
@@ -145,6 +168,8 @@ export class RunScene extends Phaser.Scene {
     const dt = realDt * this.slowTime.timeScale;
     this.parallax.update(dt);
     this.trainSystem.update(dt);
+    // Encounter system advances on scaled dt — slow-time slows encounter pacing too.
+    this.encounters.update(dt);
     this.enemySpawner.update(dt);
     this.combat.update(dt);
     this.powerSystem.update(dt);
