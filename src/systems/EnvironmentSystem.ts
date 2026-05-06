@@ -1,4 +1,7 @@
-import Phaser from 'phaser';
+// Type-only Phaser import: runtime access goes through ctx.scene (mirrors
+// moduleBehaviors.ts pattern). Avoids Phaser CanvasFeatures crashing happy-dom
+// in unit tests so EnvironmentSystem can be tested with a stub scene.
+import type Phaser from 'phaser';
 import type { ParallaxBackground } from '../lib/parallaxBackground';
 import type { BiomeId, EnvironmentCell, WeaponDamageType } from '../lib/types';
 import type { CombatSystem } from './CombatSystem';
