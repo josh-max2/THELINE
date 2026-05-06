@@ -6,6 +6,7 @@ import type { TechTreeSystem } from '../systems/TechTreeSystem';
 import { TechTreePanel } from './techTreePanel';
 import { salvageStore } from '../lib/salvageStore';
 import { decodeBuild, type SharedBuild } from '../lib/buildShare';
+import { audioStore } from '../lib/audioStore';
 
 const PLACEHOLDER_NOTE = 'Phase 5 polish';
 
@@ -18,12 +19,15 @@ export interface HubOverlayDeps {
    * decoded build. Hub-side wiring should persist via SaveSystem.updateHubState.
    */
   onApplyImport?: (build: SharedBuild) => void;
+  /** Called when the Mute toggle is clicked — persists muted flag to save. */
+  onMuteToggle?: (muted: boolean) => void;
 }
 
 export class HubOverlay {
   private readonly root: HTMLDivElement;
   private readonly salvageEl: HTMLSpanElement;
   private readonly unsubSalvage?: () => void;
+  private readonly unsubAudio?: () => void;
   private techPanel?: TechTreePanel;
 
   constructor(
@@ -42,7 +46,23 @@ export class HubOverlay {
     this.salvageEl = document.createElement('span');
     this.salvageEl.className = 'hub-salvage';
     this.salvageEl.textContent = `Salvage: ${salvageTotal}`;
+
+    // Mute toggle (Task 5.6) — sits in the header next to the salvage readout.
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'hub-mute';
+    const renderMuteLabel = () => {
+      muteBtn.textContent = audioStore.muted ? 'Sound: OFF' : 'Sound: ON';
+    };
+    renderMuteLabel();
+    muteBtn.addEventListener('click', () => {
+      const next = !audioStore.muted;
+      audioStore.setMuted(next);
+      deps.onMuteToggle?.(next);
+    });
+    this.unsubAudio = audioStore.subscribe(renderMuteLabel);
+
     header.appendChild(title);
+    header.appendChild(muteBtn);
     header.appendChild(this.salvageEl);
     this.root.appendChild(header);
 
@@ -96,6 +116,7 @@ export class HubOverlay {
 
   destroy(): void {
     this.unsubSalvage?.();
+    this.unsubAudio?.();
     this.techPanel?.destroy();
     this.techPanel = undefined;
     this.root.remove();

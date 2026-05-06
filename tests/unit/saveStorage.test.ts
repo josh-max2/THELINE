@@ -9,7 +9,7 @@ beforeEach(() => {
 });
 
 const sampleSave: SaveData = {
-  saveVersion: 3,
+  saveVersion: 4,
   totalSalvage: 42,
   hubState: defaultHubState(),
   lastSaved: '2026-05-05T12:00:00.000Z',

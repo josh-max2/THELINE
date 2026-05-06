@@ -7,6 +7,7 @@ import { activeUnlocks, canPurchase, type OwnedSet } from '../lib/techTreeMath';
 import type { TechUnlockTag } from '../lib/types';
 import { salvageStore } from '../lib/salvageStore';
 import { unlocksStore } from '../lib/unlocksStore';
+import { audioSystem } from './AudioSystem';
 import type { SaveSystem } from './SaveSystem';
 
 type Listener = (owned: OwnedSet, unlocks: ReadonlySet<TechUnlockTag>) => void;
@@ -59,6 +60,7 @@ export class TechTreeSystem {
     salvageStore.setTotal(salvageStore.total - node.cost);
     this.owned.add(nodeId);
     unlocksStore.setOwned(this.owned);
+    audioSystem.playSfx('purchase');
     if (this.save) {
       this.save.updateHubState({ purchasedTechIds: [...this.owned] });
       this.save.flushSave().catch(() => {

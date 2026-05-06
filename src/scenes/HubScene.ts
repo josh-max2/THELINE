@@ -6,6 +6,8 @@ import { LocalforageStorage } from '../lib/saveStorage';
 import { TechTreeSystem } from '../systems/TechTreeSystem';
 import { buildTokenFromUrl } from '../lib/buildShare';
 import { loadoutStore } from '../lib/loadoutStore';
+import { audioSystem } from '../systems/AudioSystem';
+import { audioStore } from '../lib/audioStore';
 
 /**
  * Between-run UI. Per DESIGN §10 + build plan Task 4.9 + Task 5.3.
@@ -45,6 +47,7 @@ export class HubScene extends Phaser.Scene {
     void this.saveSystem.init().then((data) => {
       this.techTree?.loadFromSave(data.hubState.purchasedTechIds);
       loadoutStore.setLayout(data.hubState.trainLayout);
+      audioStore.setState({ muted: data.hubState.audioMuted, volume: data.hubState.audioVolume });
     });
 
     const importToken = buildTokenFromUrl(window.location.href);
@@ -55,6 +58,10 @@ export class HubScene extends Phaser.Scene {
       {
         techTree: this.techTree,
         importToken,
+        onMuteToggle: (muted) => {
+          this.saveSystem?.updateHubState({ audioMuted: muted });
+          void this.saveSystem?.flushSave();
+        },
         onApplyImport: (build) => {
           // v0 only persists + applies trainLayout. Module/item slot mappings
           // are deferred to Phase 5.5 Engineering Bay (save schema doesn't
@@ -79,6 +86,11 @@ export class HubScene extends Phaser.Scene {
   }
 
   private depart(): void {
+    // DEPART click is the user gesture that unlocks the AudioContext.
+    // Resume here so the first SFX in the run scene actually plays.
+    void audioSystem.resumeOnGesture().then(() => {
+      audioSystem.playSfx('depart');
+    });
     this.overlay?.destroy();
     this.overlay = undefined;
     this.scene.start('RunScene');

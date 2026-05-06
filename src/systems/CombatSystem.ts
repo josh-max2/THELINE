@@ -4,6 +4,7 @@ import { salvageStore } from '../lib/salvageStore';
 import { closestTarget, targetsInRadius } from '../lib/combatMath';
 import type { EffectsSystem } from './EffectsSystem';
 import { shakeTierForKill } from '../lib/shakeMath';
+import type { AudioSystem } from './AudioSystem';
 
 interface Projectile {
   x: number;
@@ -33,6 +34,7 @@ export class CombatSystem {
   private readonly enemies: EnemySpawner;
   private readonly projectiles: Projectile[] = [];
   private effects?: EffectsSystem;
+  private audio?: AudioSystem;
 
   constructor(scene: Phaser.Scene, enemies: EnemySpawner) {
     this.scene = scene;
@@ -44,6 +46,11 @@ export class CombatSystem {
     this.effects = effects;
   }
 
+  /** Wire AudioSystem (Task 5.6) — sfx on hits / kills / fire. */
+  bindAudio(audio: AudioSystem): void {
+    this.audio = audio;
+  }
+
   /**
    * Fire a projectile from (x, y) at the closest active enemy.
    * No-op if no enemies in range.
@@ -52,6 +59,7 @@ export class CombatSystem {
     const target = this.findClosestEnemy(x, y);
     if (!target) return false;
     this.effects?.spawnMuzzleFlash(x, y, target.x, target.y);
+    this.audio?.playSfx('fire');
     return this.fireProjectile(x, y, target, damage);
   }
 
@@ -80,6 +88,7 @@ export class CombatSystem {
       // Kill burst tinted by enemy render fill — matches its silhouette color.
       this.effects?.spawnKillBurst(enemy.x, enemy.y, enemy.data.render.fill);
       this.effects?.shake(shakeTierForKill({ hp: enemy.data.hp, isBoss: enemy.data.isBoss }));
+      this.audio?.playSfx('kill');
       this.enemies.destroy(enemy);
       salvageStore.add(1);
     }
@@ -158,10 +167,11 @@ export class CombatSystem {
       if (hit) {
         p.graphics.destroy();
         this.projectiles.splice(i, 1);
-        // Discrete impact event — flash here (NOT in damageEnemy, which beams
-        // call per-frame). Spawned BEFORE damageEnemy so a kill still gets
-        // both the flash and the kill burst this frame.
+        // Discrete impact event — flash + sfx here (NOT in damageEnemy, which
+        // beams call per-frame). Spawned BEFORE damageEnemy so a kill still
+        // gets both the flash and the kill burst this frame.
         this.effects?.spawnHitFlash(hit.x, hit.y);
+        this.audio?.playSfx('hit');
         this.damageEnemy(hit, p.damage);
       }
     }

@@ -3,8 +3,9 @@
 // requires a migration."
 
 import { DEFAULT_CREW, type CarType } from './types';
+import { DEFAULT_MASTER_VOLUME } from './audioMath';
 
-export const CURRENT_SAVE_VERSION = 3;
+export const CURRENT_SAVE_VERSION = 4;
 
 // ─── Schema versions ──────────────────────────────────────────────────────
 
@@ -28,8 +29,23 @@ export interface SaveDataV2 {
 export interface SaveDataV3 {
   saveVersion: 3;
   totalSalvage: number;
+  hubState: HubStateV3;
+  lastSaved: string;
+}
+
+export interface SaveDataV4 {
+  saveVersion: 4;
+  totalSalvage: number;
   hubState: HubState;
   lastSaved: string;
+}
+
+export interface HubStateV3 {
+  modulesOwned: string[];
+  crewRoster: ReadonlyArray<{ id: number; color: string }>;
+  trainLayout: CarType[];
+  completedRuns: number;
+  purchasedTechIds: string[];
 }
 
 export interface HubStateV2 {
@@ -50,10 +66,14 @@ export interface HubState {
   completedRuns: number;
   /** Tech-tree node ids the player has purchased. Consumer systems read via `activeUnlocks`. */
   purchasedTechIds: string[];
+  /** Audio mute flag — persisted so the player's preference survives reloads. */
+  audioMuted: boolean;
+  /** Master volume in [0, 1]. Default DEFAULT_MASTER_VOLUME. */
+  audioVolume: number;
 }
 
 /** Canonical "current save" shape. */
-export type SaveData = SaveDataV3;
+export type SaveData = SaveDataV4;
 
 // ─── Defaults ─────────────────────────────────────────────────────────────
 
@@ -66,6 +86,8 @@ export function defaultHubState(): HubState {
     trainLayout: ['engine', 'weapon', 'armor', 'crew', 'cargo'],
     completedRuns: 0,
     purchasedTechIds: [],
+    audioMuted: false,
+    audioVolume: DEFAULT_MASTER_VOLUME,
   };
 }
 
@@ -121,6 +143,29 @@ const MIGRATIONS: Record<number, Migration> = {
       lastSaved: typeof prev.lastSaved === 'string' ? prev.lastSaved : new Date().toISOString(),
     };
   },
+  // v3 → v4: extend HubState with audio prefs.
+  3: (prev: unknown): unknown => {
+    if (!isPlainObject(prev)) throw new Error('v3 migration: not an object');
+    const prevHub = isPlainObject(prev.hubState) ? prev.hubState : {};
+    return {
+      saveVersion: 4,
+      totalSalvage: typeof prev.totalSalvage === 'number' ? prev.totalSalvage : 0,
+      hubState: {
+        modulesOwned: Array.isArray(prevHub.modulesOwned) ? prevHub.modulesOwned : ['basic-cannon'],
+        crewRoster: Array.isArray(prevHub.crewRoster)
+          ? prevHub.crewRoster
+          : DEFAULT_CREW.map((c) => ({ id: c.id, color: c.color })),
+        trainLayout: Array.isArray(prevHub.trainLayout)
+          ? prevHub.trainLayout
+          : ['engine', 'weapon', 'armor', 'crew', 'cargo'],
+        completedRuns: typeof prevHub.completedRuns === 'number' ? prevHub.completedRuns : 0,
+        purchasedTechIds: Array.isArray(prevHub.purchasedTechIds) ? prevHub.purchasedTechIds : [],
+        audioMuted: false,
+        audioVolume: DEFAULT_MASTER_VOLUME,
+      },
+      lastSaved: typeof prev.lastSaved === 'string' ? prev.lastSaved : new Date().toISOString(),
+    };
+  },
 };
 
 /**
@@ -162,8 +207,8 @@ export function migrateSave(raw: unknown): SaveData {
     }
     version = nv;
   }
-  if (!isValidV3(current)) {
-    throw new Error('Save data failed v3 validation after migration');
+  if (!isValidV4(current)) {
+    throw new Error('Save data failed v4 validation after migration');
   }
   return current;
 }
@@ -221,6 +266,30 @@ export function isValidV3(data: unknown): data is SaveDataV3 {
     Array.isArray(h.trainLayout) &&
     typeof h.completedRuns === 'number' &&
     Array.isArray(h.purchasedTechIds)
+  );
+}
+
+export function isValidV4(data: unknown): data is SaveDataV4 {
+  if (!isPlainObject(data)) return false;
+  const r = data as Record<string, unknown>;
+  if (
+    r.saveVersion !== 4 ||
+    typeof r.totalSalvage !== 'number' ||
+    !Number.isFinite(r.totalSalvage) ||
+    typeof r.lastSaved !== 'string'
+  ) {
+    return false;
+  }
+  if (!isPlainObject(r.hubState)) return false;
+  const h = r.hubState as Record<string, unknown>;
+  return (
+    Array.isArray(h.modulesOwned) &&
+    Array.isArray(h.crewRoster) &&
+    Array.isArray(h.trainLayout) &&
+    typeof h.completedRuns === 'number' &&
+    Array.isArray(h.purchasedTechIds) &&
+    typeof h.audioMuted === 'boolean' &&
+    typeof h.audioVolume === 'number'
   );
 }
 

@@ -5,6 +5,7 @@ import { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
 import { EnemySpawner } from '../systems/EnemySpawner';
 import { CombatSystem } from '../systems/CombatSystem';
 import { EffectsSystem } from '../systems/EffectsSystem';
+import { audioSystem } from '../systems/AudioSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { PowerSystem } from '../systems/PowerSystem';
 import { CrewSystem } from '../systems/CrewSystem';
@@ -17,6 +18,7 @@ import { salvageStore } from '../lib/salvageStore';
 import { unlocksStore } from '../lib/unlocksStore';
 import { encodeBuild, shareUrl, type SharedBuild } from '../lib/buildShare';
 import { loadoutStore } from '../lib/loadoutStore';
+import { audioStore } from '../lib/audioStore';
 import { PowerPanel } from '../ui/powerPanel';
 import { CrewPanel } from '../ui/crewPanel';
 
@@ -65,6 +67,7 @@ export class RunScene extends Phaser.Scene {
     this.combat = new CombatSystem(this, this.enemySpawner);
     this.effects = new EffectsSystem(this);
     this.combat.bindEffects(this.effects);
+    this.combat.bindAudio(audioSystem);
 
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
     this.itemSystem = new ItemAttachmentSystem(this, this.trainSystem);
@@ -165,6 +168,9 @@ export class RunScene extends Phaser.Scene {
     this.saveSystem = new SaveSystem(new LocalforageStorage());
     void this.saveSystem.init().then((data) => {
       unlocksStore.setOwned(data.hubState.purchasedTechIds);
+      // audioStore drives AudioSystem master gain via subscribe; pushing here
+      // keeps run-scene reloads (no Hub) playing the saved volume preference.
+      audioStore.setState({ muted: data.hubState.audioMuted, volume: data.hubState.audioVolume });
     });
     this.saveSystem.registerLifecycleHandlers(window, document);
 

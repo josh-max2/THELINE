@@ -6,33 +6,36 @@ import {
   isValidV1,
   isValidV2,
   isValidV3,
+  isValidV4,
   migrateSave,
   __registerTestMigrationV0toV1,
 } from '../../src/lib/saveSchema';
 
 describe('saveSchema constants', () => {
-  test('CURRENT_SAVE_VERSION is 3 (Phase 5 Task 5.3)', () => {
-    expect(CURRENT_SAVE_VERSION).toBe(3);
+  test('CURRENT_SAVE_VERSION is 4 (Phase 5 Task 5.6)', () => {
+    expect(CURRENT_SAVE_VERSION).toBe(4);
   });
 });
 
 describe('createNewSave', () => {
-  test('produces a valid v3 save', () => {
+  test('produces a valid v4 save', () => {
     const save = createNewSave();
-    expect(save.saveVersion).toBe(3);
+    expect(save.saveVersion).toBe(4);
     expect(save.totalSalvage).toBe(0);
     expect(typeof save.lastSaved).toBe('string');
     expect(new Date(save.lastSaved).toString()).not.toBe('Invalid Date');
-    expect(isValidV3(save)).toBe(true);
+    expect(isValidV4(save)).toBe(true);
   });
 
-  test('includes default hubState with empty purchasedTechIds', () => {
+  test('includes default hubState with empty purchasedTechIds + audio defaults', () => {
     const save = createNewSave();
     expect(save.hubState.modulesOwned).toContain('basic-cannon');
     expect(save.hubState.crewRoster).toHaveLength(4);
     expect(save.hubState.trainLayout).toEqual(['engine', 'weapon', 'armor', 'crew', 'cargo']);
     expect(save.hubState.completedRuns).toBe(0);
     expect(save.hubState.purchasedTechIds).toEqual([]);
+    expect(save.hubState.audioMuted).toBe(false);
+    expect(typeof save.hubState.audioVolume).toBe('number');
   });
 });
 
@@ -73,8 +76,21 @@ describe('isValidV2', () => {
 });
 
 describe('isValidV3', () => {
-  test('accepts a well-formed v3 save', () => {
-    expect(isValidV3(createNewSave())).toBe(true);
+  test('accepts a well-formed v3 save (legacy)', () => {
+    expect(
+      isValidV3({
+        saveVersion: 3,
+        totalSalvage: 0,
+        lastSaved: 'x',
+        hubState: {
+          modulesOwned: [],
+          crewRoster: [],
+          trainLayout: [],
+          completedRuns: 0,
+          purchasedTechIds: [],
+        },
+      }),
+    ).toBe(true);
   });
 
   test('rejects v2 saves (missing purchasedTechIds)', () => {
@@ -122,41 +138,99 @@ describe('isValidV3', () => {
   });
 });
 
-describe('migrateSave — current-version round-trip', () => {
-  test('passes through a valid v3 save unchanged', () => {
-    const v3 = createNewSave();
-    expect(migrateSave(v3)).toEqual(v3);
+describe('isValidV4', () => {
+  test('accepts a well-formed v4 save (current)', () => {
+    expect(isValidV4(createNewSave())).toBe(true);
+  });
+
+  test('rejects v3 saves (missing audio fields)', () => {
+    expect(
+      isValidV4({
+        saveVersion: 3,
+        totalSalvage: 0,
+        lastSaved: 'x',
+        hubState: {
+          modulesOwned: [],
+          crewRoster: [],
+          trainLayout: [],
+          completedRuns: 0,
+          purchasedTechIds: [],
+        },
+      }),
+    ).toBe(false);
+  });
+
+  test('rejects malformed audioMuted (not a boolean)', () => {
+    const fresh = createNewSave();
+    // @ts-expect-error -- intentionally malformed
+    fresh.hubState.audioMuted = 'no';
+    expect(isValidV4(fresh)).toBe(false);
   });
 });
 
-describe('migrateSave — v1 → v3 chain', () => {
-  test('preserves totalSalvage from v1 → v3', () => {
+describe('migrateSave — current-version round-trip', () => {
+  test('passes through a valid v4 save unchanged', () => {
+    const v4 = createNewSave();
+    expect(migrateSave(v4)).toEqual(v4);
+  });
+});
+
+describe('migrateSave — v1 → v4 chain', () => {
+  test('preserves totalSalvage from v1 → v4', () => {
     const v1 = { saveVersion: 1, totalSalvage: 137, lastSaved: '2026-05-04T10:00:00Z' };
     const migrated = migrateSave(v1);
-    expect(migrated.saveVersion).toBe(3);
+    expect(migrated.saveVersion).toBe(4);
     expect(migrated.totalSalvage).toBe(137);
   });
 
-  test('preserves lastSaved from v1 through both migration steps', () => {
+  test('preserves lastSaved from v1 through all migration steps', () => {
     const v1 = { saveVersion: 1, totalSalvage: 0, lastSaved: '2026-05-04T10:00:00Z' };
     const migrated = migrateSave(v1);
     expect(migrated.lastSaved).toBe('2026-05-04T10:00:00Z');
   });
 
-  test('v1 ends up with default v3 hubState (incl. empty purchasedTechIds)', () => {
+  test('v1 ends up with default v4 hubState (incl. audio defaults)', () => {
     const v1 = { saveVersion: 1, totalSalvage: 50, lastSaved: 'x' };
     const migrated = migrateSave(v1);
     expect(migrated.hubState).toEqual(defaultHubState());
-    expect(migrated.hubState.purchasedTechIds).toEqual([]);
+    expect(migrated.hubState.audioMuted).toBe(false);
   });
 
-  test('migrated chain produces a valid V3', () => {
+  test('migrated chain produces a valid V4', () => {
     const v1 = { saveVersion: 1, totalSalvage: 0, lastSaved: 'x' };
-    expect(isValidV3(migrateSave(v1))).toBe(true);
+    expect(isValidV4(migrateSave(v1))).toBe(true);
   });
 });
 
-describe('migrateSave — v2 → v3 (Task 5.3)', () => {
+describe('migrateSave — v3 → v4 (Task 5.6)', () => {
+  const v3 = {
+    saveVersion: 3,
+    totalSalvage: 50,
+    lastSaved: '2026-05-05T10:00:00Z',
+    hubState: {
+      modulesOwned: ['basic-cannon', 'gatling'],
+      crewRoster: [{ id: 0, color: '#fff' }],
+      trainLayout: ['engine', 'weapon'],
+      completedRuns: 3,
+      purchasedTechIds: ['t1-frostworks'],
+    },
+  };
+
+  test('preserves all v3 hubState fields', () => {
+    const m = migrateSave(v3);
+    expect(m.hubState.modulesOwned).toEqual(['basic-cannon', 'gatling']);
+    expect(m.hubState.purchasedTechIds).toEqual(['t1-frostworks']);
+    expect(m.hubState.completedRuns).toBe(3);
+  });
+
+  test('seeds audioMuted=false + audioVolume number', () => {
+    const m = migrateSave(v3);
+    expect(m.hubState.audioMuted).toBe(false);
+    expect(typeof m.hubState.audioVolume).toBe('number');
+  });
+});
+
+describe('migrateSave — v2 → v3 → v4 (Task 5.3+5.6 chain)', () => {
   const v2 = {
     saveVersion: 2,
     totalSalvage: 200,
@@ -209,7 +283,7 @@ describe('migrateSave — error paths', () => {
   });
 });
 
-describe('migrateSave — framework chains v0 → v1 → v2 → v3', () => {
+describe('migrateSave — framework chains v0 → v1 → v2 → v3 → v4', () => {
   let unregister: (() => void) | undefined;
 
   afterEach(() => {
@@ -219,14 +293,14 @@ describe('migrateSave — framework chains v0 → v1 → v2 → v3', () => {
     }
   });
 
-  test('v0 save chains through v0→v1→v2→v3 to current shape', () => {
+  test('v0 save chains through every migration to current shape', () => {
     unregister = __registerTestMigrationV0toV1();
     const v0 = { saveVersion: 0, salvage: 99 };
     const migrated = migrateSave(v0);
-    expect(migrated.saveVersion).toBe(3);
-    // v0→v1 maps `salvage` → `totalSalvage`; v1→v2→v3 preserves it.
+    expect(migrated.saveVersion).toBe(4);
+    // v0→v1 maps `salvage` → `totalSalvage`; later migrations preserve it.
     expect(migrated.totalSalvage).toBe(99);
     expect(migrated.hubState).toEqual(defaultHubState());
-    expect(isValidV3(migrated)).toBe(true);
+    expect(isValidV4(migrated)).toBe(true);
   });
 });
