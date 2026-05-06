@@ -117,18 +117,12 @@ export class RunScene extends Phaser.Scene {
       this.encounterText.setText(`${enc.name} — ${sec.toFixed(0)}s`);
     });
 
-    this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.8 (Environment)', {
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#7b8aa3',
-      })
-      .setDepth(100);
-
+    // Phase 4 closeout audit: removed the dev-only HUD title label that kept
+    // drifting across tasks. Encounter HUD + Salvage HUD now convey state.
     this.add
       .text(
         16,
-        32,
+        16,
         `Train: ${this.trainSystem.length}/8 · Turrets: ${this.moduleSystem.attachmentCount}/10 · Items: ${this.itemSystem.totalItems}`,
         { fontFamily: 'monospace', fontSize: '12px', color: '#7b8aa3' },
       )

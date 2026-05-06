@@ -3,6 +3,39 @@
 > Findings from the reviewer agent (Opus). New entries added at the top.
 > Categories: BLOCKER | NEEDS-CHANGE | NIT | OK-AS-IS
 
+## 2026-05-05 — Phase 4 end-of-phase review (advisor)
+
+**Scope:** Tasks 4.1 → 4.10 (12 tasks shipped in one session). Phase 4 closes the core systems layer per build plan.
+
+**Verdict: 0 BLOCKER, 0 NEEDS-CHANGE that gates Phase 5 Task 5.1.** Phase 5 cleared.
+
+**Cheap fixes addressed in same commit:**
+1. **`defaultHubState()` duplicated DEFAULT_CREW.** Drift hazard for Phase 5 crew expansion. Fixed: derive from `DEFAULT_CREW.map(...)`.
+2. **In-canvas HUD label drifted across tasks** (4.5 → 4.6 → 4.8 → would have continued). Removed; Hub is the entry point now and the encounter/salvage HUDs already convey state.
+
+**NIT (tracked):**
+- **Salvage=19 baseline match is weak proof.** Spawn cap (1.5s × 8-turret oversaturation) dominates the rate. If PowerSystem.efficiencyAt() / CrewSystem.fireRateBoostAt() / composeStats integration silently failed, salvage would still be ~19. ComposeStats math is unit-tested, runtime wiring is type-checked, but no automated probe verifies that the +50% crew buff or power efficiency ACTUALLY arrives at the cannon at runtime. **Phase 5 Task 5.1 balance simulator** (sparse-turret scenario) is the natural place to close this empirical loop.
+- **DeathScene never tested.** Build plan Task 4.9 promised "Hub → Run → Death → Hub cycle E2E"; DeathScene is unreachable until Phase 4.X+ wires car damage. Build-plan promise deferred, not fulfilled.
+- **Save v2 migration tested only against synthetic v1.** No regression coverage against actual Phase-3-shipped save data (impossible without versioned binaries). Risk: low.
+- **Encounter transitions silent.** Travel → Swarm → ... only updates HUD text. Phase 5.5 (visual polish) adds flash/sound feedback.
+
+**OK-AS-IS — don't second-guess:**
+- Pattern continuity (validators-first / pure-helpers / Phaser-shells) held across 12 tasks; adding any new system is paint-by-numbers.
+- BehaviorContext additive extension to {scene, train, combat, items, power, crew}: handlers ignore unfamiliar fields cleanly.
+- Setter-cycle pattern creaks loudly (throw-if-unbound) rather than silently — MAS↔IAS, MAS↔Power, MAS↔Crew, EncounterSystem↔Environment.
+- Bundle +18KB gzipped for ~2200 LoC of new source — strong code/size ratio.
+- 3 ADRs ACCEPTED, 14 reviewer-pass sections in REVIEW_NOTES.md, all docs in sync.
+- 0 TODOs, 0 FIXMEs, only 2 console.warn calls (both intentional in saveStorage error paths).
+- Empirical: combat loop salvage scaling remained bit-deterministic (19 at 30s) across every architectural layer added.
+
+**Caught and fixed in flight (Phase 4):**
+- Task 4.4: `bindCrewSystem` called in RunScene before adding the method to MAS — TS caught.
+- Task 4.6: missing pool imports on EnemySpawner — TS caught after first failed Edit.
+- Task 4.7: property name `spawnIntervalSec` vs `spawnIntervalSeconds` mismatch — TS caught.
+- Task 4.8: RunScene Edits failed silently mid-batch (file-state cache); re-Read + re-applied.
+- Task 4.10: tests asserted `saveVersion === 1` — broke after V2 bump; updated.
+- Self-contradictory test in combatMath (Task 4.2) — caught by failing run.
+
 ## 2026-05-05 — Task 4.2.1 reviewer pass (advisor)
 
 **Verdict:** Item composition wired end-to-end cleanly. Pattern continuity hits 6th instance (validators-first / pure-helpers / Phaser-shells). The setter-cycle between IAS and MAS is the only architectural creak — and it creaks loudly via runtime guards.

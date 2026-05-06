@@ -2,7 +2,7 @@
 // Per CLAUDE.md hard rule "Save versioning is sacred. Every save change
 // requires a migration."
 
-import type { CarType } from './types';
+import { DEFAULT_CREW, type CarType } from './types';
 
 export const CURRENT_SAVE_VERSION = 2;
 
@@ -45,12 +45,9 @@ export type SaveData = SaveDataV2;
 export function defaultHubState(): HubState {
   return {
     modulesOwned: ['basic-cannon'],
-    crewRoster: [
-      { id: 0, color: '#e08040' },
-      { id: 1, color: '#40a0e0' },
-      { id: 2, color: '#80c060' },
-      { id: 3, color: '#d8c040' },
-    ],
+    // Derive from DEFAULT_CREW so Phase 5 expansion (named crew with specialties)
+    // doesn't drift the save shape. Advisor catch — dedup hardcoded array.
+    crewRoster: DEFAULT_CREW.map((c) => ({ id: c.id, color: c.color })),
     trainLayout: ['engine', 'weapon', 'armor', 'crew', 'cargo'],
     completedRuns: 0,
   };
