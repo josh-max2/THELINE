@@ -1,10 +1,10 @@
 # ADR-001: Vertical-Slice Design Gaps
 
-> Status: PROPOSED — awaiting human approval
+> Status: ACCEPTED — Gap 4 (train topology) resolved as Option A by human; gaps 1, 2, 3, 5, 6 owner-locked
 > Date: 2026-05-05
 > Authors: claude (acting as planner/Opus)
 > Phase: 3 (vertical slice)
-> Decision deadline: before Task 3.2 (Phaser canvas)
+> DESIGN.md updated: yes (Section 4 layout rules + Section 15 pinned decision added)
 
 ## Context
 

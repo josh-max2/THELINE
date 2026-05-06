@@ -34,6 +34,16 @@ v1: max train length 8 cars. v2: scales to 15.
 | Crew Car | Holds 4 crew slots (slot-based, no avatars) | 1 | Medium |
 | Cargo Car | Holds run rewards; vulnerable | 0 | Low |
 
+**v1 layout rules** *(per ADR-001)*:
+
+- Train is an ordered array of cars, indexed left-to-right.
+- Engine occupies index 0 (leftmost). Exactly one Engine in v1. Cannot be moved or removed.
+- Cargo Car, if present, defaults to the rightmost position but is not constrained there.
+- Weapon / Armor / Crew cars may appear in any order between Engine and Cargo.
+- Train length: 1–8 cars in v1.
+- Reordering happens in the Hub's Engineering Bay between runs, never mid-run.
+- **v2 may relax** these rules: multi-engine builds, mid-train engines, alternative topologies, train-as-build-axis.
+
 ## 5. Modules
 
 30 modules in v1, 6 categories (kinetic, fire, cryo, explosive, electric, support).
@@ -139,6 +149,7 @@ Every ~10 runs, completing a "Charter" (multi-run journey across a region) grant
 - **Genre framing:** Active management roguelike with incremental progression. NOT pure idle.
 - **Pause:** Slow-time (Bastion-style), not full pause. Hold spacebar → 25% time.
 - **Crew:** Slot-based (4 slots), no individual avatars or pathing in v1.
+- **Train topology v1:** Ordered array. Engine leftmost & immovable. Single Engine. Cargo defaults rightmost. v2 may relax. (See ADR-001.)
 - **Visual:** Vector-geometric. Commit. No pixel art for v1.
 - **Save schema:** Versioned from commit one. Migrations sacred.
 - **Determinism:** Every run seeded via `?seed=<n>` URL param.
