@@ -89,7 +89,49 @@ export interface ModuleData {
   allowedSlots: SlotType[];
   render: RenderRecipe;
   behavior: ModuleBehaviorData;
+  /** Per ADR-002 — max total items that can stack on this turret. Default 3 (v1). */
+  maxStack?: number;
 }
+
+// ─── Items (per ADR-002) ───────────────────────────────────────────────────
+
+/** Tunable runtime stats that items can modify on a turret. */
+export type ItemStat =
+  | 'damage'
+  | 'fireRate'
+  | 'projectileCount'
+  | 'pierce'
+  | 'range'
+  | 'critChance';
+
+/** How an item effect composes against the turret's existing stat value. */
+export type ItemEffectOp = 'add' | 'multiply' | 'set';
+
+export interface ItemEffect {
+  stat: ItemStat;
+  op: ItemEffectOp;
+  value: number;
+}
+
+export type ItemCategory = 'damage' | 'projectile' | 'rate' | 'status' | 'synergy';
+
+export interface ItemData {
+  id: string;
+  name: string;
+  category: ItemCategory;
+  /** Restrict which turret archetypes (behavior kinds) accept this item. */
+  appliesTo: BehaviorKind[];
+  /** Small silhouette drawn stacked on the turret base. */
+  render: RenderRecipe;
+  /** Stat modifiers composed against the turret's base stats per frame. */
+  effects: ItemEffect[];
+  /** Max copies of THIS item that can stack on a single turret. Default 1. */
+  stackCap?: number;
+}
+
+/** Default v1 caps per ADR-002. */
+export const DEFAULT_TURRET_MAX_STACK = 3;
+export const DEFAULT_ITEM_STACK_CAP = 1;
 
 /**
  * Qualified slot id — composite key `${carIndex}:${slotId}`.

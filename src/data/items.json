@@ -1,0 +1,59 @@
+{
+  "rivet-rounds": {
+    "id": "rivet-rounds",
+    "name": "Rivet Rounds",
+    "category": "damage",
+    "appliesTo": ["auto-fire", "aoe-pulse"],
+    "effects": [
+      { "stat": "damage", "op": "add", "value": 5 }
+    ],
+    "stackCap": 3,
+    "render": {
+      "fill": "#c08040",
+      "stroke": "#603018",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -3, "y": -2, "w": 6, "h": 4 },
+        { "kind": "tri", "points": [[3, -2], [7, 0], [3, 2]] }
+      ]
+    }
+  },
+  "auto-loader": {
+    "id": "auto-loader",
+    "name": "Auto-loader",
+    "category": "rate",
+    "appliesTo": ["auto-fire", "aoe-pulse"],
+    "effects": [
+      { "stat": "fireRate", "op": "add", "value": 0.5 }
+    ],
+    "stackCap": 2,
+    "render": {
+      "fill": "#a0a0b0",
+      "stroke": "#404048",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "circle", "x": 0, "y": 0, "r": 5 },
+        { "kind": "circle", "x": 0, "y": 0, "r": 2, "fill": "#404048" }
+      ]
+    }
+  },
+  "split-shot": {
+    "id": "split-shot",
+    "name": "Split Shot",
+    "category": "projectile",
+    "appliesTo": ["auto-fire"],
+    "effects": [
+      { "stat": "projectileCount", "op": "add", "value": 1 }
+    ],
+    "stackCap": 2,
+    "render": {
+      "fill": "#80b0d0",
+      "stroke": "#304060",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "tri", "points": [[-4, -4], [4, 0], [-4, 4]] },
+        { "kind": "rect", "x": -5, "y": -1, "w": 4, "h": 2, "fill": "#304060" }
+      ]
+    }
+  }
+}
