@@ -1,0 +1,24 @@
+{
+  "basic-cannon": {
+    "id": "basic-cannon",
+    "name": "Basic Cannon",
+    "category": "kinetic",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#5a6f9d",
+      "stroke": "#0c1828",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -4, "w": 12, "h": 8 },
+        { "kind": "rect", "x": 4, "y": -2, "w": 12, "h": 4, "fill": "#7287b7" }
+      ]
+    },
+    "behavior": {
+      "kind": "auto-fire",
+      "fireRate": 1.0,
+      "damage": 10,
+      "projectile": "kinetic-bolt",
+      "targeting": "closest"
+    }
+  }
+}

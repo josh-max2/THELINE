@@ -1,52 +1,63 @@
 import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
+import { TRAIN_ANCHOR_X, TRAIN_CENTER_Y } from '../../src/lib/trainLayout';
 
-test.describe('Phase 3 / Task 3.3 — train renders', () => {
+// Compute the cannon's expected world position from data so the test stays in
+// sync if engine slot positions are repositioned in cars.json.
+// Playwright runs from project root, so a relative path works.
+const cars = JSON.parse(fs.readFileSync('src/data/cars.json', 'utf8')) as Record<
+  string,
+  { slots: Array<{ id: string; x: number; y: number }> }
+>;
+const slot1 = cars.engine.slots.find((s) => s.id === 'engine-top-1')!;
+const cannonWorldX = TRAIN_ANCHOR_X + slot1.x;
+const cannonWorldY = TRAIN_CENTER_Y + slot1.y;
+
+test.describe('Phase 3 / Tasks 3.3–3.4 — train + module renders', () => {
   test('canvas is present and produces non-empty pixel data after 2 seconds', async ({ page }) => {
     await page.goto('/');
 
     const canvas = page.locator('canvas').first();
     await expect(canvas).toBeVisible();
 
-    // Let Phaser tick for a couple of seconds so the parallax has scrolled
-    // and the engine car has rendered.
     await page.waitForTimeout(2000);
 
-    const dims = await canvas.evaluate((el: HTMLCanvasElement) => ({
-      w: el.width,
-      h: el.height,
-    }));
+    const dims = await canvas.evaluate((el: HTMLCanvasElement) => ({ w: el.width, h: el.height }));
     expect(dims.w).toBeGreaterThanOrEqual(1280);
     expect(dims.h).toBeGreaterThanOrEqual(720);
 
-    // Sample the engine area (around x≈200, y≈360 in canvas coords).
-    // We just assert the pixel isn't pure background — meaning the engine
-    // shape was drawn into the canvas.
-    const samples = await page.evaluate(async () => {
-      const c = document.querySelector('canvas') as HTMLCanvasElement;
-      if (!c) return null;
-      // Use 2D drawImage to read pixels, since the live canvas is WebGL.
-      const off = document.createElement('canvas');
-      off.width = c.width;
-      off.height = c.height;
-      const ctx = off.getContext('2d')!;
-      ctx.drawImage(c, 0, 0);
-      const scaleX = c.width / 1280;
-      const scaleY = c.height / 720;
-      const px = (x: number, y: number) =>
-        Array.from(
-          ctx.getImageData(Math.round(x * scaleX), Math.round(y * scaleY), 1, 1).data,
-        );
-      return {
-        background: px(640, 100), // upper middle, should be near background
-        engine: px(200, 360), // engine center
-        ground: px(640, 600), // ground band
-      };
-    });
+    const samples = await page.evaluate(
+      async ({ cx, cy }: { cx: number; cy: number }) => {
+        const c = document.querySelector('canvas') as HTMLCanvasElement;
+        if (!c) return null;
+        const off = document.createElement('canvas');
+        off.width = c.width;
+        off.height = c.height;
+        const ctx = off.getContext('2d')!;
+        ctx.drawImage(c, 0, 0);
+        const scaleX = c.width / 1280;
+        const scaleY = c.height / 720;
+        const px = (x: number, y: number) =>
+          Array.from(
+            ctx.getImageData(Math.round(x * scaleX), Math.round(y * scaleY), 1, 1).data,
+          );
+        return {
+          background: px(640, 100),
+          engineBody: px(200, 360),
+          cannon: px(cx, cy),
+        };
+      },
+      { cx: cannonWorldX, cy: cannonWorldY },
+    );
 
     expect(samples).not.toBeNull();
     if (!samples) return;
 
-    // Engine pixel should not equal background pixel — engine drew something there.
-    expect(samples.engine.slice(0, 3)).not.toEqual(samples.background.slice(0, 3));
+    // Engine body must paint over background.
+    expect(samples.engineBody.slice(0, 3)).not.toEqual(samples.background.slice(0, 3));
+    // Cannon must paint over background.
+    expect(samples.cannon.slice(0, 3)).not.toEqual(samples.background.slice(0, 3));
+    // Cannon must be a distinct fill from the engine body (they use different slate hues).
+    expect(samples.cannon.slice(0, 3)).not.toEqual(samples.engineBody.slice(0, 3));
   });
 });

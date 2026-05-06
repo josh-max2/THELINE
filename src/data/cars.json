@@ -6,8 +6,8 @@
     "width": 96,
     "height": 64,
     "slots": [
-      { "id": "engine-top-1", "type": "top", "x": -16, "y": -36 },
-      { "id": "engine-top-2", "type": "top", "x": 16, "y": -36 }
+      { "id": "engine-top-1", "type": "top", "x": -24, "y": -36 },
+      { "id": "engine-top-2", "type": "top", "x": 24, "y": -36 }
     ],
     "render": {
       "fill": "#2c3e58",
@@ -15,9 +15,9 @@
       "strokeWidth": 2,
       "shapes": [
         { "kind": "rect", "x": -48, "y": -24, "w": 96, "h": 48 },
-        { "kind": "rect", "x": -14, "y": -36, "w": 28, "h": 12, "fill": "#3a4f72" },
-        { "kind": "rect", "x": 18, "y": -42, "w": 8, "h": 18, "fill": "#1a2334" },
-        { "kind": "circle", "x": 22, "y": -46, "r": 4, "fill": "#4a5d80" },
+        { "kind": "rect", "x": -10, "y": -34, "w": 20, "h": 10, "fill": "#3a4f72" },
+        { "kind": "rect", "x": 36, "y": -42, "w": 6, "h": 18, "fill": "#1a2334" },
+        { "kind": "circle", "x": 39, "y": -46, "r": 3, "fill": "#4a5d80" },
         { "kind": "circle", "x": -30, "y": 24, "r": 7, "fill": "#1a2334" },
         { "kind": "circle", "x": 0, "y": 24, "r": 7, "fill": "#1a2334" },
         { "kind": "circle", "x": 30, "y": 24, "r": 7, "fill": "#1a2334" }
