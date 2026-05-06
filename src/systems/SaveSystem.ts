@@ -1,5 +1,11 @@
 import type { SaveStorage } from '../lib/saveStorage';
-import { CURRENT_SAVE_VERSION, createNewSave, type SaveData } from '../lib/saveSchema';
+import {
+  CURRENT_SAVE_VERSION,
+  createNewSave,
+  defaultHubState,
+  type HubState,
+  type SaveData,
+} from '../lib/saveSchema';
 import { salvageStore } from '../lib/salvageStore';
 
 const AUTO_SAVE_INTERVAL_SECONDS = 30;
@@ -19,6 +25,8 @@ export class SaveSystem {
   private timeSinceLastSave = 0;
   private visibilityHandler?: () => void;
   private beforeUnloadHandler?: () => void;
+  /** Cached hubState from last init/flush. Phase 5+ wires real Hub mutations through here. */
+  private currentHubState: HubState = defaultHubState();
 
   constructor(storage: SaveStorage) {
     this.storage = storage;
@@ -29,10 +37,12 @@ export class SaveSystem {
     const loaded = await this.storage.load();
     if (loaded) {
       salvageStore.setTotal(loaded.totalSalvage);
+      this.currentHubState = loaded.hubState;
       return loaded;
     }
     const fresh = createNewSave();
     salvageStore.setTotal(0);
+    this.currentHubState = fresh.hubState;
     await this.storage.save(fresh);
     return fresh;
   }
@@ -52,9 +62,15 @@ export class SaveSystem {
     const data: SaveData = {
       saveVersion: CURRENT_SAVE_VERSION,
       totalSalvage: salvageStore.total,
+      hubState: this.currentHubState,
       lastSaved: new Date().toISOString(),
     };
     await this.storage.save(data);
+  }
+
+  /** Phase 5+ Engineering Bay/Tech Tree mutations call this to update Hub state. */
+  updateHubState(patch: Partial<HubState>): void {
+    this.currentHubState = { ...this.currentHubState, ...patch };
   }
 
   /**

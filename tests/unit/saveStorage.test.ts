@@ -1,6 +1,6 @@
 import { describe, expect, test, beforeEach } from 'vitest';
 import { InMemoryStorage } from '../../src/lib/saveStorage';
-import type { SaveData } from '../../src/lib/saveSchema';
+import { defaultHubState, type SaveData } from '../../src/lib/saveSchema';
 
 let storage: InMemoryStorage;
 
@@ -9,8 +9,9 @@ beforeEach(() => {
 });
 
 const sampleSave: SaveData = {
-  saveVersion: 1,
+  saveVersion: 2,
   totalSalvage: 42,
+  hubState: defaultHubState(),
   lastSaved: '2026-05-05T12:00:00.000Z',
 };
 

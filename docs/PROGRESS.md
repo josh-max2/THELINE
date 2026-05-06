@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 4 marathon — Tasks 4.3 → 4.9 in single session)
-> Build phase: 4 (core systems — only 4.10 left)
+> Last updated: 2026-05-05 by claude (Phase 4 COMPLETE — all 12 tasks shipped in single marathon session)
+> Build phase: 5 (content + polish) — ready to start
 > v1 ETA: 2026-07-15
 
 ## Current build status
@@ -10,7 +10,8 @@
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
-- Phase 4 core systems: 🚧 (4.1–4.9 ✅, 4.10 next — Save v2)
+- Phase 4 core systems: ✅ (Tasks 4.1–4.10 done — 214 unit + 3 E2E pass)
+- Phase 5 content + polish: 🚧 (next)
 - Phase 5 content + polish: ⏳
 - Phase 6 launch prep: ⏳
 

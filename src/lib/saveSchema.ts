@@ -1,30 +1,85 @@
 // Save schema + migration runner. Pure — no Phaser, no localforage, no DOM.
 // Per CLAUDE.md hard rule "Save versioning is sacred. Every save change
-// requires a migration." The framework lives here even at v1 (identity),
-// so Phase 4's bump to v2 is one entry in MIGRATIONS away.
+// requires a migration."
 
-export const CURRENT_SAVE_VERSION = 1;
+import type { CarType } from './types';
+
+export const CURRENT_SAVE_VERSION = 2;
+
+// ─── Schema versions ──────────────────────────────────────────────────────
 
 export interface SaveDataV1 {
   saveVersion: 1;
   totalSalvage: number;
-  /** ISO 8601 timestamp. */
   lastSaved: string;
 }
 
-/** The shape callers should treat as the canonical "current save". */
-export type SaveData = SaveDataV1;
+/**
+ * v2 adds `hubState` to support Phase 4 Task 4.9's between-run UI:
+ * persistent module unlocks, crew roster, train layout, completed-run count.
+ * `totalSalvage` and `lastSaved` keep their semantics; only the inner shape grows.
+ */
+export interface SaveDataV2 {
+  saveVersion: 2;
+  totalSalvage: number;
+  hubState: HubState;
+  lastSaved: string;
+}
 
-/** A migration takes the previous version's shape and returns the next version's shape. */
+export interface HubState {
+  /** Module ids the player has unlocked across all runs (Phase 5 wires Engineering Bay). */
+  modulesOwned: string[];
+  /** Crew the player has recruited (v0 ships DEFAULT_CREW; Phase 5 expands). */
+  crewRoster: ReadonlyArray<{ id: number; color: string }>;
+  /** Train composition saved in the Engineering Bay. */
+  trainLayout: CarType[];
+  /** Lifetime count of completed runs. */
+  completedRuns: number;
+}
+
+/** Canonical "current save" shape. */
+export type SaveData = SaveDataV2;
+
+// ─── Defaults ─────────────────────────────────────────────────────────────
+
+export function defaultHubState(): HubState {
+  return {
+    modulesOwned: ['basic-cannon'],
+    crewRoster: [
+      { id: 0, color: '#e08040' },
+      { id: 1, color: '#40a0e0' },
+      { id: 2, color: '#80c060' },
+      { id: 3, color: '#d8c040' },
+    ],
+    trainLayout: ['engine', 'weapon', 'armor', 'crew', 'cargo'],
+    completedRuns: 0,
+  };
+}
+
+export function createNewSave(): SaveData {
+  return {
+    saveVersion: 2,
+    totalSalvage: 0,
+    hubState: defaultHubState(),
+    lastSaved: new Date().toISOString(),
+  };
+}
+
+// ─── Migrations ───────────────────────────────────────────────────────────
+
 type Migration = (prev: unknown) => unknown;
 
-/**
- * Migrations indexed by FROM-version. To bump to v2, add `1: (v1) => v2`.
- * Each migration must produce data that the *next* migration (or final
- * validator) accepts.
- */
 const MIGRATIONS: Record<number, Migration> = {
-  // No prior versions. Reserved.
+  // v1 → v2: keep totalSalvage + lastSaved verbatim, init hubState defaults.
+  1: (prev: unknown): unknown => {
+    if (!isPlainObject(prev)) throw new Error('v1 migration: not an object');
+    return {
+      saveVersion: 2,
+      totalSalvage: typeof prev.totalSalvage === 'number' ? prev.totalSalvage : 0,
+      hubState: defaultHubState(),
+      lastSaved: typeof prev.lastSaved === 'string' ? prev.lastSaved : new Date().toISOString(),
+    };
+  },
 };
 
 /**
@@ -66,22 +121,14 @@ export function migrateSave(raw: unknown): SaveData {
     }
     version = nv;
   }
-  if (!isValidV1(current)) {
-    throw new Error('Save data failed v1 validation after migration');
+  if (!isValidV2(current)) {
+    throw new Error('Save data failed v2 validation after migration');
   }
   return current;
 }
 
-/** Build a fresh save with default values. */
-export function createNewSave(): SaveData {
-  return {
-    saveVersion: CURRENT_SAVE_VERSION,
-    totalSalvage: 0,
-    lastSaved: new Date().toISOString(),
-  };
-}
+// ─── Validators ───────────────────────────────────────────────────────────
 
-/** Runtime validator for the current shape. */
 export function isValidV1(data: unknown): data is SaveDataV1 {
   if (!isPlainObject(data)) return false;
   const r = data as Record<string, unknown>;
@@ -93,16 +140,35 @@ export function isValidV1(data: unknown): data is SaveDataV1 {
   );
 }
 
+export function isValidV2(data: unknown): data is SaveDataV2 {
+  if (!isPlainObject(data)) return false;
+  const r = data as Record<string, unknown>;
+  if (
+    r.saveVersion !== 2 ||
+    typeof r.totalSalvage !== 'number' ||
+    !Number.isFinite(r.totalSalvage) ||
+    typeof r.lastSaved !== 'string'
+  ) {
+    return false;
+  }
+  if (!isPlainObject(r.hubState)) return false;
+  const h = r.hubState as Record<string, unknown>;
+  return (
+    Array.isArray(h.modulesOwned) &&
+    Array.isArray(h.crewRoster) &&
+    Array.isArray(h.trainLayout) &&
+    typeof h.completedRuns === 'number'
+  );
+}
+
 function isPlainObject(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
 }
 
-// ─── Test-only export for migration-framework verification ────────────────
-//
-// We have never shipped v0, but we still want a unit test that proves the
-// migration framework actually runs migrations end-to-end. This stub
-// migration is registered only when `__registerTestMigration` is called from
-// a test, then unregistered. Production code never sees it.
+// ─── Test-only migration framework verification ───────────────────────────
+// Phase 3's __registerTestMigrationV0toV1 hook stays for the framework
+// regression test (proves the runner walks registered migrations end-to-end
+// even though we never shipped v0).
 
 export function __registerTestMigrationV0toV1(): () => void {
   if (MIGRATIONS[0]) {

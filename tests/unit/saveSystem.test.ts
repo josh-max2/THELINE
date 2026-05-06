@@ -2,6 +2,7 @@ import { describe, expect, test, beforeEach, afterEach } from 'vitest';
 import { SaveSystem } from '../../src/systems/SaveSystem';
 import { InMemoryStorage } from '../../src/lib/saveStorage';
 import { salvageStore } from '../../src/lib/salvageStore';
+import { defaultHubState } from '../../src/lib/saveSchema';
 
 let storage: InMemoryStorage;
 let system: SaveSystem;
@@ -19,7 +20,7 @@ afterEach(() => {
 describe('SaveSystem.init', () => {
   test('creates a fresh save when no data exists, persists it', async () => {
     const data = await system.init();
-    expect(data.saveVersion).toBe(1);
+    expect(data.saveVersion).toBe(2);
     expect(data.totalSalvage).toBe(0);
     expect(salvageStore.total).toBe(0);
     expect(await storage.load()).not.toBeNull();
@@ -27,8 +28,9 @@ describe('SaveSystem.init', () => {
 
   test('loads existing save and restores salvageStore', async () => {
     await storage.save({
-      saveVersion: 1,
+      saveVersion: 2,
       totalSalvage: 42,
+      hubState: defaultHubState(),
       lastSaved: '2026-05-05T12:00:00Z',
     });
     const data = await system.init();
@@ -38,8 +40,9 @@ describe('SaveSystem.init', () => {
 
   test('restoring fires only one listener notification (no flicker)', async () => {
     await storage.save({
-      saveVersion: 1,
+      saveVersion: 2,
       totalSalvage: 7,
+      hubState: defaultHubState(),
       lastSaved: '2026-05-05T12:00:00Z',
     });
     const calls: number[] = [];
@@ -47,6 +50,14 @@ describe('SaveSystem.init', () => {
     await system.init();
     unsub();
     expect(calls).toEqual([7]); // single fire — no intermediate 0 → 7 flicker
+  });
+
+  test('migrates v1 → v2 on load and preserves totalSalvage', async () => {
+    storage.setRaw({ saveVersion: 1, totalSalvage: 99, lastSaved: '2026-05-04T10:00:00Z' });
+    const data = await system.init();
+    expect(data.saveVersion).toBe(2);
+    expect(data.totalSalvage).toBe(99);
+    expect(data.hubState).toEqual(defaultHubState());
   });
 });
 
