@@ -18,7 +18,8 @@
       "fireRate": 1.0,
       "damage": 10,
       "projectile": "kinetic-bolt",
-      "targeting": "closest"
+      "targeting": "closest",
+      "power": 1
     }
   },
   "gatling": {
@@ -42,7 +43,8 @@
       "fireRate": 4.0,
       "damage": 3,
       "projectile": "kinetic-bolt",
-      "targeting": "closest"
+      "targeting": "closest",
+      "power": 1
     }
   },
   "flamethrower": {
@@ -63,7 +65,8 @@
       "kind": "beam",
       "damagePerSecond": 10,
       "range": 220,
-      "color": "#ff5020"
+      "color": "#ff5020",
+      "power": 1
     }
   },
   "plasma-torch": {
@@ -85,7 +88,8 @@
       "kind": "beam",
       "damagePerSecond": 18,
       "range": 280,
-      "color": "#ff8060"
+      "color": "#ff8060",
+      "power": 2
     }
   },
   "freeze-beam": {
@@ -106,7 +110,8 @@
       "kind": "beam",
       "damagePerSecond": 5,
       "range": 320,
-      "color": "#80c0ff"
+      "color": "#80c0ff",
+      "power": 1
     }
   },
   "ice-mortar": {
@@ -129,7 +134,8 @@
       "damage": 15,
       "radius": 100,
       "range": 500,
-      "color": "#a0d8ff"
+      "color": "#a0d8ff",
+      "power": 2
     }
   },
   "missile": {
@@ -154,7 +160,8 @@
       "damage": 35,
       "radius": 90,
       "range": 600,
-      "color": "#ff8040"
+      "color": "#ff8040",
+      "power": 2
     }
   },
   "lightning": {
@@ -176,7 +183,8 @@
       "kind": "beam",
       "damagePerSecond": 14,
       "range": 260,
-      "color": "#a0f0ff"
+      "color": "#a0f0ff",
+      "power": 1
     }
   },
   "shield-emitter": {
@@ -200,7 +208,8 @@
       "effect": "shield",
       "magnitude": 0.5,
       "range": 140,
-      "color": "#a0d0ff"
+      "color": "#a0d0ff",
+      "power": 1
     }
   },
   "repair-drone": {
@@ -223,7 +232,8 @@
       "effect": "repair",
       "magnitude": 2,
       "range": 120,
-      "color": "#a0ffa0"
+      "color": "#a0ffa0",
+      "power": 1
     }
   }
 }

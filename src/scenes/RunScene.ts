@@ -5,9 +5,11 @@ import { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
 import { EnemySpawner } from '../systems/EnemySpawner';
 import { CombatSystem } from '../systems/CombatSystem';
 import { SaveSystem } from '../systems/SaveSystem';
+import { PowerSystem } from '../systems/PowerSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
 import { salvageStore } from '../lib/salvageStore';
+import { PowerPanel } from '../ui/powerPanel';
 
 /** Per ADR-001 §Gap 2 — world scrolls past the static train at this rate. */
 export const WORLD_VELOCITY_PX_PER_SEC = 50;
@@ -19,6 +21,8 @@ export class RunScene extends Phaser.Scene {
   private enemySpawner!: EnemySpawner;
   private combat!: CombatSystem;
   private saveSystem!: SaveSystem;
+  private powerSystem!: PowerSystem;
+  private powerPanel!: PowerPanel;
   private parallax!: ParallaxBackground;
   private salvageText!: Phaser.GameObjects.Text;
   private unsubscribeSalvage?: () => void;
@@ -44,8 +48,11 @@ export class RunScene extends Phaser.Scene {
 
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
     this.itemSystem = new ItemAttachmentSystem(this, this.trainSystem);
-    // Resolve the IAS↔MAS reference cycle.
+    this.powerSystem = new PowerSystem(this.trainSystem, this.moduleSystem);
+
+    // Resolve the IAS↔MAS reference cycle + bind PowerSystem.
     this.moduleSystem.bindItemSystem(this.itemSystem);
+    this.moduleSystem.bindPowerSystem(this.powerSystem);
     this.itemSystem.bindModuleSystem(this.moduleSystem);
 
     // Phase 4 Task 4.2: showcase 8 of 10 turrets across the 4 archetypes.
@@ -63,8 +70,12 @@ export class RunScene extends Phaser.Scene {
     this.itemSystem.attach(0, 'engine-top-1', 'rivet-rounds');
     this.itemSystem.attach(0, 'engine-top-1', 'auto-loader');
 
+    // Power weights initialized after modules attach (so demand snapshot is accurate).
+    this.powerSystem.initializeDefaults();
+    this.powerPanel = new PowerPanel(document.body, this.trainSystem, this.powerSystem);
+
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.2.1 (items composed)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.3 (Power)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -103,6 +114,7 @@ export class RunScene extends Phaser.Scene {
       this.unsubscribeSalvage?.();
       this.moduleSystem.destroyAll();
       this.itemSystem.destroyAll();
+      this.powerPanel.destroy();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });
@@ -114,6 +126,8 @@ export class RunScene extends Phaser.Scene {
     this.trainSystem.update(dt);
     this.enemySpawner.update(dt);
     this.combat.update(dt);
+    // PowerSystem must update BEFORE moduleSystem so handlers see fresh efficiency.
+    this.powerSystem.update(dt);
     this.moduleSystem.update(dt);
     this.saveSystem.update(dt);
   }

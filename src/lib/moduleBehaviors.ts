@@ -15,7 +15,8 @@ import type { BehaviorKind, ModuleData, QualifiedSlotId } from './types';
 import type { TrainSystem } from '../systems/TrainSystem';
 import type { CombatSystem } from '../systems/CombatSystem';
 import type { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
-import { composeStats, getNumStat, getStrStat } from './composeStats';
+import type { PowerSystem } from '../systems/PowerSystem';
+import { composeStats, getNumStat, getStrStat, type EffectiveStats } from './composeStats';
 
 /** Per-frame context passed to every active behavior. */
 export interface BehaviorContext {
@@ -23,6 +24,7 @@ export interface BehaviorContext {
   train: TrainSystem;
   combat: CombatSystem;
   items: ItemAttachmentSystem;
+  power: PowerSystem;
 }
 
 /** A live attachment as the registry sees it. */
@@ -80,12 +82,22 @@ function turretWorldPos(
 }
 
 /**
- * Compose effective stats for a turret: base behavior data ⊕ stacked items.
- * Result is a flat key-map handlers can read with getNumStat/getStrStat.
- * Per ADR-002 Phase 4.2.1.
+ * Compose effective stats for a turret: base behavior data ⊕ stacked items
+ * ⊕ power efficiency multiplier on rate-style stats.
+ * Per ADR-002 (item composition) and Task 4.3 (power).
  */
-function effectiveStats(handle: AttachedModuleHandle, ctx: BehaviorContext) {
-  return composeStats(handle.data.behavior, ctx.items.itemsAt(handle.qualifiedSlotId));
+function effectiveStats(handle: AttachedModuleHandle, ctx: BehaviorContext): EffectiveStats {
+  const stats = composeStats(handle.data.behavior, ctx.items.itemsAt(handle.qualifiedSlotId));
+  // Apply power efficiency to rate-style stats (firing slows under low power).
+  const colon = handle.qualifiedSlotId.indexOf(':');
+  if (colon < 0) return stats;
+  const carIndex = Number(handle.qualifiedSlotId.slice(0, colon));
+  const eff = ctx.power.efficiencyAt(carIndex);
+  if (eff < 1) {
+    if (typeof stats.fireRate === 'number') stats.fireRate *= eff;
+    if (typeof stats.damagePerSecond === 'number') stats.damagePerSecond *= eff;
+  }
+  return stats;
 }
 
 function parseHexColor(hex: string): number {

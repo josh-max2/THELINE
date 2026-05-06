@@ -5,6 +5,7 @@
     "hp": 400,
     "width": 96,
     "height": 64,
+    "powerGen": 10,
     "slots": [
       { "id": "engine-top-1", "type": "top", "x": -24, "y": -36 },
       { "id": "engine-top-2", "type": "top", "x": 24, "y": -36 }

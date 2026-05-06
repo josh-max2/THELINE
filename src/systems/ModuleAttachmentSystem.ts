@@ -10,6 +10,7 @@ import { moduleBehaviors, type AttachedModuleHandle, type BehaviorContext } from
 import type { TrainSystem } from './TrainSystem';
 import type { CombatSystem } from './CombatSystem';
 import type { ItemAttachmentSystem } from './ItemAttachmentSystem';
+import type { PowerSystem } from './PowerSystem';
 
 const MODULES = modulesDataRaw as unknown as Record<string, ModuleData>;
 
@@ -33,6 +34,7 @@ export class ModuleAttachmentSystem {
   private readonly tracker = new AttachmentTracker();
   private readonly phaserAttachments = new Map<string, PhaserAttachment>();
   private items?: ItemAttachmentSystem;
+  private power?: PowerSystem;
 
   constructor(scene: Phaser.Scene, train: TrainSystem, combat: CombatSystem) {
     this.scene = scene;
@@ -43,6 +45,11 @@ export class ModuleAttachmentSystem {
   /** Resolves the IAS↔MAS cycle. Throws on update() if not bound. */
   bindItemSystem(items: ItemAttachmentSystem): void {
     this.items = items;
+  }
+
+  /** Wire the PowerSystem so behavior handlers can read efficiency. */
+  bindPowerSystem(power: PowerSystem): void {
+    this.power = power;
   }
 
   /** Read the turret data at a qualified slot. Used by IAS during attach validation. */
@@ -120,6 +127,11 @@ export class ModuleAttachmentSystem {
     return this.tracker.size;
   }
 
+  /** Iterate every (qualifiedSlotId, module) pair. Used by PowerSystem. */
+  attachments(): ReadonlyArray<{ qualifiedSlotId: QualifiedSlotId; module: ModuleData }> {
+    return this.tracker.list().map((r) => ({ qualifiedSlotId: r.qualifiedSlotId, module: r.module }));
+  }
+
   /**
    * Detach every attached module, firing each handler's `destroy()` lifecycle
    * hook. Call from scene SHUTDOWN so behaviors holding non-Phaser resources
@@ -156,6 +168,15 @@ export class ModuleAttachmentSystem {
     if (!this.items) {
       throw new Error('ModuleAttachmentSystem.bindItemSystem(...) must be called before update()');
     }
-    return { scene: this.scene, train: this.train, combat: this.combat, items: this.items };
+    if (!this.power) {
+      throw new Error('ModuleAttachmentSystem.bindPowerSystem(...) must be called before update()');
+    }
+    return {
+      scene: this.scene,
+      train: this.train,
+      combat: this.combat,
+      items: this.items,
+      power: this.power,
+    };
   }
 }

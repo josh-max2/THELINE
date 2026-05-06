@@ -47,6 +47,8 @@ export interface CarData {
   height: number;
   slots: SlotDef[];
   render: RenderRecipe;
+  /** Power generated per second. Engine has this in v1; v2 may add Reactor cars. */
+  powerGen?: number;
 }
 
 // ─── Modules ───────────────────────────────────────────────────────────────
