@@ -1,0 +1,66 @@
+{
+  "t1-spare-parts": {
+    "id": "t1-spare-parts",
+    "name": "Spare Parts",
+    "tier": 1,
+    "cost": 10,
+    "description": "Start each run with one extra attached turret.",
+    "grants": ["extra-turret-slot"]
+  },
+  "t1-frostworks": {
+    "id": "t1-frostworks",
+    "name": "Frostworks",
+    "tier": 1,
+    "cost": 10,
+    "description": "Unlock cryo turrets in the Engineering Bay.",
+    "grants": ["category-cryo"]
+  },
+  "t2-pyrotechnics": {
+    "id": "t2-pyrotechnics",
+    "name": "Pyrotechnics",
+    "tier": 2,
+    "cost": 25,
+    "description": "Unlock fire turrets in the Engineering Bay.",
+    "grants": ["category-fire"]
+  },
+  "t2-demolitionist": {
+    "id": "t2-demolitionist",
+    "name": "Demolitionist",
+    "tier": 2,
+    "cost": 25,
+    "description": "Unlock explosive turrets in the Engineering Bay.",
+    "grants": ["category-explosive"]
+  },
+  "t2-reinforced-rounds": {
+    "id": "t2-reinforced-rounds",
+    "name": "Reinforced Rounds",
+    "tier": 2,
+    "cost": 30,
+    "description": "+10% damage on all turrets, all runs.",
+    "grants": ["global-damage-buff"]
+  },
+  "t3-storm-caller": {
+    "id": "t3-storm-caller",
+    "name": "Storm Caller",
+    "tier": 3,
+    "cost": 50,
+    "description": "Unlock electric turrets in the Engineering Bay.",
+    "grants": ["category-electric"]
+  },
+  "t3-eternal-engine": {
+    "id": "t3-eternal-engine",
+    "name": "Eternal Engine",
+    "tier": 3,
+    "cost": 50,
+    "description": "Auto-relaunch a new run when the train falls.",
+    "grants": ["auto-run"]
+  },
+  "t3-salvage-magnets": {
+    "id": "t3-salvage-magnets",
+    "name": "Salvage Magnets",
+    "tier": 3,
+    "cost": 60,
+    "description": "+25% Salvage from every kill.",
+    "grants": ["salvage-bonus"]
+  }
+}

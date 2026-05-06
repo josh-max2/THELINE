@@ -228,6 +228,34 @@ export interface BossPhaseSpec {
   speedMult?: number;
 }
 
+// ─── Tech Tree (per Task 5.3 + DESIGN §10) ────────────────────────────────
+
+/** Tags consumer systems read off the unlocked-set to gate behavior. */
+export type TechUnlockTag =
+  | 'extra-turret-slot'
+  | 'category-cryo'
+  | 'category-fire'
+  | 'category-explosive'
+  | 'category-electric'
+  | 'global-damage-buff'
+  | 'salvage-bonus'
+  | 'auto-run';
+
+export interface TechNodeData {
+  id: string;
+  name: string;
+  tier: 1 | 2 | 3;
+  /** Salvage cost to purchase. */
+  cost: number;
+  /** Player-facing flavor + effect summary. */
+  description: string;
+  /**
+   * Tags this node grants when owned. Consumer systems check
+   * `techTree.has('extra-turret-slot')` to apply.
+   */
+  grants: TechUnlockTag[];
+}
+
 export interface EnemyData {
   id: string;
   name: string;

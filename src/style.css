@@ -220,6 +220,134 @@ body {
   background: #6ab0f8;
 }
 
+/* ─── TechTreePanel (Task 5.3) ──────────────────────────────────────── */
+
+.hub-panel.hub-techtree {
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.hub-panel.hub-techtree:hover {
+  border-color: #4a90d8;
+  background: rgba(30, 50, 80, 0.55);
+}
+.tech-tree-modal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(5, 8, 14, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tech-tree-modal {
+  background: rgba(15, 22, 36, 0.98);
+  border: 1px solid #2a3f5e;
+  border-radius: 6px;
+  padding: 24px 32px;
+  min-width: 720px;
+  max-width: 1080px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #c0d0e0;
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.tech-tree-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid #1a2840;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.tech-tree-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #e0eafa;
+}
+.tech-tree-close {
+  background: rgba(60, 30, 30, 0.7);
+  border: 1px solid #803030;
+  border-radius: 3px;
+  color: #f0c0c0;
+  font: 10px ui-monospace, monospace;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.tech-tree-tier {
+  margin-bottom: 16px;
+}
+.tech-tree-tier-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #6a86a8;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.tech-tree-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tech-node {
+  background: rgba(20, 30, 50, 0.6);
+  border: 1px solid #233a5a;
+  border-radius: 4px;
+  padding: 10px 12px;
+  flex: 1 1 220px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.tech-node[data-state='owned'] {
+  background: rgba(30, 70, 40, 0.55);
+  border-color: #4a8060;
+  cursor: default;
+}
+.tech-node[data-state='locked'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tech-node[data-state='affordable']:hover {
+  background: rgba(30, 50, 80, 0.7);
+  border-color: #4a90d8;
+}
+.tech-node[data-state='cant-afford'] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.tech-node-name {
+  font-weight: 700;
+  color: #e0eafa;
+  font-size: 13px;
+}
+.tech-node-cost {
+  font-size: 10px;
+  color: #d8a040;
+  letter-spacing: 0.06em;
+}
+.tech-node-cost[data-cant-afford='true'] {
+  color: #d04848;
+}
+.tech-node-desc {
+  margin: 0;
+  font-size: 11px;
+  color: #8aa0c0;
+  line-height: 1.4;
+}
+.tech-node-status {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a8060;
+}
+.tech-node-status[data-state='locked'] {
+  color: #6a7080;
+}
+
 /* "Abandon" button rendered above the canvas during Run. */
 .run-abandon {
   position: fixed;

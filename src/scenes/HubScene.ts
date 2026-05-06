@@ -1,21 +1,29 @@
 import Phaser from 'phaser';
 import { HubOverlay } from '../ui/hubOverlay';
 import { salvageStore } from '../lib/salvageStore';
+import { SaveSystem } from '../systems/SaveSystem';
+import { LocalforageStorage } from '../lib/saveStorage';
+import { TechTreeSystem } from '../systems/TechTreeSystem';
 
 /**
- * Between-run UI. Per DESIGN §10 + build plan Task 4.9.
- * v0: Engineering Bay / Crew Roster / Tech Tree / Lore Log are placeholder
- * panels; only the Mission Board's Depart button is wired up.
+ * Between-run UI. Per DESIGN §10 + build plan Task 4.9 + Task 5.3.
+ * Tech Tree is now functional; other panels remain Phase 5 placeholders.
+ *
+ * Hub owns its own SaveSystem instance — it loads on enter, persists tech
+ * purchases immediately, and tears down on shutdown. RunScene also owns one;
+ * both share the same localforage backing store, so writes from either side
+ * are visible to the other on the next load.
  */
 export class HubScene extends Phaser.Scene {
   private overlay?: HubOverlay;
+  private saveSystem?: SaveSystem;
+  private techTree?: TechTreeSystem;
 
   constructor() {
     super({ key: 'HubScene' });
   }
 
   create(): void {
-    // Show Salvage at top so the player sees it persists across runs.
     this.add
       .text(640, 24, 'THE LINE — Hub', {
         fontFamily: 'monospace',
@@ -24,13 +32,31 @@ export class HubScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0);
 
-    this.overlay = new HubOverlay(document.body, salvageStore.total, () => {
-      this.depart();
+    this.saveSystem = new SaveSystem(new LocalforageStorage());
+    this.techTree = new TechTreeSystem();
+    this.techTree.bindSaveSystem(this.saveSystem);
+
+    // Async hydrate from save before showing the overlay so the Tech Tree
+    // panel reflects already-purchased unlocks. Salvage HUD shows 0 → real
+    // value via salvageStore.subscribe in HubOverlay; one-frame flash
+    // is acceptable on initial Hub load (same pattern as RunScene).
+    void this.saveSystem.init().then((data) => {
+      this.techTree?.loadFromSave(data.hubState.purchasedTechIds);
     });
+
+    this.overlay = new HubOverlay(
+      document.body,
+      salvageStore.total,
+      () => this.depart(),
+      { techTree: this.techTree },
+    );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.overlay?.destroy();
       this.overlay = undefined;
+      void this.saveSystem?.flushSave();
+      this.saveSystem = undefined;
+      this.techTree = undefined;
     });
   }
 

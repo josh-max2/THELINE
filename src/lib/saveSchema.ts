@@ -4,7 +4,7 @@
 
 import { DEFAULT_CREW, type CarType } from './types';
 
-export const CURRENT_SAVE_VERSION = 2;
+export const CURRENT_SAVE_VERSION = 3;
 
 // ─── Schema versions ──────────────────────────────────────────────────────
 
@@ -15,15 +15,28 @@ export interface SaveDataV1 {
 }
 
 /**
- * v2 adds `hubState` to support Phase 4 Task 4.9's between-run UI:
- * persistent module unlocks, crew roster, train layout, completed-run count.
- * `totalSalvage` and `lastSaved` keep their semantics; only the inner shape grows.
+ * v2 added `hubState` for between-run UI; v3 extends HubState with
+ * `purchasedTechIds` for Task 5.3 tech-tree progression.
  */
 export interface SaveDataV2 {
   saveVersion: 2;
   totalSalvage: number;
+  hubState: HubStateV2;
+  lastSaved: string;
+}
+
+export interface SaveDataV3 {
+  saveVersion: 3;
+  totalSalvage: number;
   hubState: HubState;
   lastSaved: string;
+}
+
+export interface HubStateV2 {
+  modulesOwned: string[];
+  crewRoster: ReadonlyArray<{ id: number; color: string }>;
+  trainLayout: CarType[];
+  completedRuns: number;
 }
 
 export interface HubState {
@@ -35,10 +48,12 @@ export interface HubState {
   trainLayout: CarType[];
   /** Lifetime count of completed runs. */
   completedRuns: number;
+  /** Tech-tree node ids the player has purchased. Consumer systems read via `activeUnlocks`. */
+  purchasedTechIds: string[];
 }
 
 /** Canonical "current save" shape. */
-export type SaveData = SaveDataV2;
+export type SaveData = SaveDataV3;
 
 // ─── Defaults ─────────────────────────────────────────────────────────────
 
@@ -50,12 +65,13 @@ export function defaultHubState(): HubState {
     crewRoster: DEFAULT_CREW.map((c) => ({ id: c.id, color: c.color })),
     trainLayout: ['engine', 'weapon', 'armor', 'crew', 'cargo'],
     completedRuns: 0,
+    purchasedTechIds: [],
   };
 }
 
 export function createNewSave(): SaveData {
   return {
-    saveVersion: 2,
+    saveVersion: CURRENT_SAVE_VERSION,
     totalSalvage: 0,
     hubState: defaultHubState(),
     lastSaved: new Date().toISOString(),
@@ -68,12 +84,40 @@ type Migration = (prev: unknown) => unknown;
 
 const MIGRATIONS: Record<number, Migration> = {
   // v1 → v2: keep totalSalvage + lastSaved verbatim, init hubState defaults.
+  // (Walked through v3 directly for fresh installs; v1→v2 still needed for legacy saves.)
   1: (prev: unknown): unknown => {
     if (!isPlainObject(prev)) throw new Error('v1 migration: not an object');
+    const v2HubDefaults = defaultHubState();
     return {
       saveVersion: 2,
       totalSalvage: typeof prev.totalSalvage === 'number' ? prev.totalSalvage : 0,
-      hubState: defaultHubState(),
+      hubState: {
+        modulesOwned: v2HubDefaults.modulesOwned,
+        crewRoster: v2HubDefaults.crewRoster,
+        trainLayout: v2HubDefaults.trainLayout,
+        completedRuns: v2HubDefaults.completedRuns,
+      },
+      lastSaved: typeof prev.lastSaved === 'string' ? prev.lastSaved : new Date().toISOString(),
+    };
+  },
+  // v2 → v3: extend HubState with purchasedTechIds.
+  2: (prev: unknown): unknown => {
+    if (!isPlainObject(prev)) throw new Error('v2 migration: not an object');
+    const prevHub = isPlainObject(prev.hubState) ? prev.hubState : {};
+    return {
+      saveVersion: 3,
+      totalSalvage: typeof prev.totalSalvage === 'number' ? prev.totalSalvage : 0,
+      hubState: {
+        modulesOwned: Array.isArray(prevHub.modulesOwned) ? prevHub.modulesOwned : ['basic-cannon'],
+        crewRoster: Array.isArray(prevHub.crewRoster)
+          ? prevHub.crewRoster
+          : DEFAULT_CREW.map((c) => ({ id: c.id, color: c.color })),
+        trainLayout: Array.isArray(prevHub.trainLayout)
+          ? prevHub.trainLayout
+          : ['engine', 'weapon', 'armor', 'crew', 'cargo'],
+        completedRuns: typeof prevHub.completedRuns === 'number' ? prevHub.completedRuns : 0,
+        purchasedTechIds: [],
+      },
       lastSaved: typeof prev.lastSaved === 'string' ? prev.lastSaved : new Date().toISOString(),
     };
   },
@@ -118,8 +162,8 @@ export function migrateSave(raw: unknown): SaveData {
     }
     version = nv;
   }
-  if (!isValidV2(current)) {
-    throw new Error('Save data failed v2 validation after migration');
+  if (!isValidV3(current)) {
+    throw new Error('Save data failed v3 validation after migration');
   }
   return current;
 }
@@ -155,6 +199,28 @@ export function isValidV2(data: unknown): data is SaveDataV2 {
     Array.isArray(h.crewRoster) &&
     Array.isArray(h.trainLayout) &&
     typeof h.completedRuns === 'number'
+  );
+}
+
+export function isValidV3(data: unknown): data is SaveDataV3 {
+  if (!isPlainObject(data)) return false;
+  const r = data as Record<string, unknown>;
+  if (
+    r.saveVersion !== 3 ||
+    typeof r.totalSalvage !== 'number' ||
+    !Number.isFinite(r.totalSalvage) ||
+    typeof r.lastSaved !== 'string'
+  ) {
+    return false;
+  }
+  if (!isPlainObject(r.hubState)) return false;
+  const h = r.hubState as Record<string, unknown>;
+  return (
+    Array.isArray(h.modulesOwned) &&
+    Array.isArray(h.crewRoster) &&
+    Array.isArray(h.trainLayout) &&
+    typeof h.completedRuns === 'number' &&
+    Array.isArray(h.purchasedTechIds)
   );
 }
 

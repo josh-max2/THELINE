@@ -20,7 +20,7 @@ afterEach(() => {
 describe('SaveSystem.init', () => {
   test('creates a fresh save when no data exists, persists it', async () => {
     const data = await system.init();
-    expect(data.saveVersion).toBe(2);
+    expect(data.saveVersion).toBe(3);
     expect(data.totalSalvage).toBe(0);
     expect(salvageStore.total).toBe(0);
     expect(await storage.load()).not.toBeNull();
@@ -28,7 +28,7 @@ describe('SaveSystem.init', () => {
 
   test('loads existing save and restores salvageStore', async () => {
     await storage.save({
-      saveVersion: 2,
+      saveVersion: 3,
       totalSalvage: 42,
       hubState: defaultHubState(),
       lastSaved: '2026-05-05T12:00:00Z',
@@ -40,7 +40,7 @@ describe('SaveSystem.init', () => {
 
   test('restoring fires only one listener notification (no flicker)', async () => {
     await storage.save({
-      saveVersion: 2,
+      saveVersion: 3,
       totalSalvage: 7,
       hubState: defaultHubState(),
       lastSaved: '2026-05-05T12:00:00Z',
@@ -52,10 +52,10 @@ describe('SaveSystem.init', () => {
     expect(calls).toEqual([7]); // single fire — no intermediate 0 → 7 flicker
   });
 
-  test('migrates v1 → v2 on load and preserves totalSalvage', async () => {
+  test('migrates v1 → v3 on load and preserves totalSalvage', async () => {
     storage.setRaw({ saveVersion: 1, totalSalvage: 99, lastSaved: '2026-05-04T10:00:00Z' });
     const data = await system.init();
-    expect(data.saveVersion).toBe(2);
+    expect(data.saveVersion).toBe(3);
     expect(data.totalSalvage).toBe(99);
     expect(data.hubState).toEqual(defaultHubState());
   });
