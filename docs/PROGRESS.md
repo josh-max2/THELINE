@@ -72,6 +72,9 @@
 - `docs/screenshots/2026-05-05-task3.3-engine-parallax.png` — TrainSystem v0 first render: engine silhouette (slate-blue body, cab, smokestack, 3 wheels) at left, parallax horizon ticks scrolling.
 - `docs/screenshots/2026-05-05-task3.4-cannon-attached.png` — ModuleAttachmentSystem v0: basic-cannon (turret + horizontal barrel) attached at engine `top-1` slot, visible above the cab. Engine art repositioned (cab moved center-back, smokestack moved far-right) to clear slot positions.
 - `docs/screenshots/2026-05-05-task3.5-combat.png` — Task 3.5 combat loop active: engine + cannon at left, projectile mid-flight (yellow dot south-east of engine — scout was approaching from bottom), Salvage HUD reads "Salvage: 3" (3 scouts killed in 6s).
+- `docs/screenshots/2026-05-05-task3.5-combat-30s.png` — Audit screenshot, 30s combat session: salvage = 19 (linear scaling, ~0.63 kills/sec, matches 1.5s spawn interval).
+- `docs/screenshots/2026-05-05-phase3-close-audit.png` — Phase 3 closeout 30s combat audit: salvage = 19 (deterministic match to Task 3.5 baseline).
+- `docs/screenshots/2026-05-05-task4.1-five-cars.png` — Full default v1 train rendered: Engine (slate + cannon) → Weapon (gray + 3 mount stubs) → Armor (rust + plating + rivets) → Crew (green + portholes) → Cargo (brown + open-top crate). HUD shows `Train: 5/8`.
 
 ## Audit log
 
