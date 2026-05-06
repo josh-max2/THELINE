@@ -6,7 +6,7 @@
 // the codebase will receive it. Add to it (don't replace) as new systems
 // come online (Task 3.5 will add CombatSystem, EnemySpawner refs, etc.).
 
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import type { BehaviorKind, ModuleData, QualifiedSlotId } from './types';
 import type { TrainSystem } from '../systems/TrainSystem';
 import type { CombatSystem } from '../systems/CombatSystem';
@@ -55,11 +55,46 @@ class ModuleBehaviorRegistry {
 /** Singleton registry. Handlers register themselves at module-load. */
 export const moduleBehaviors = new ModuleBehaviorRegistry();
 
-// ─── Auto-fire (Task 3.5: wired into CombatSystem) ────────────────────────
-//
-// Per ADR-002: damage and fireRate are read from the turret's behavior data
-// (base stats only in Phase 3). Phase 4 Task 4.2.1 will swap this read for a
-// composed-stats lookup that folds attached items in.
+// ─── Shared helpers ───────────────────────────────────────────────────────
+
+/** Resolve the turret's world position from its qualified slot id. */
+function turretWorldPos(
+  handle: AttachedModuleHandle,
+  ctx: BehaviorContext,
+): { x: number; y: number } | undefined {
+  const colon = handle.qualifiedSlotId.indexOf(':');
+  if (colon < 0) return undefined;
+  const carIndex = Number(handle.qualifiedSlotId.slice(0, colon));
+  const slotId = handle.qualifiedSlotId.slice(colon + 1);
+  const car = ctx.train.getCar(carIndex);
+  if (!car) return undefined;
+  const slot = car.data.slots.find((s) => s.id === slotId);
+  if (!slot) return undefined;
+  return { x: car.x + slot.x, y: car.y + slot.y };
+}
+
+/**
+ * Typed read of a numeric tuning stat from behavior data.
+ * Phase 4 Task 4.2.1 swaps this for `getEffectiveStat(handle, items, key)`
+ * that composes item modifiers — addresses Phase 3 audit NIT.
+ */
+function getNumStat(behavior: ModuleData['behavior'], key: string, fallback: number): number {
+  const v = behavior[key];
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
+
+function getStrStat(behavior: ModuleData['behavior'], key: string, fallback: string): string {
+  const v = behavior[key];
+  return typeof v === 'string' ? v : fallback;
+}
+
+function parseHexColor(hex: string): number {
+  let s = hex.replace('#', '');
+  if (s.length === 3) s = s.split('').map((c) => c + c).join('');
+  return Number.parseInt(s, 16);
+}
+
+// ─── Auto-fire (kinetic projectile turrets) ───────────────────────────────
 
 interface AutoFireState {
   cooldownSeconds: number;
@@ -73,27 +108,146 @@ const autoFireHandler: BehaviorHandler = {
     const s = handle.state['auto-fire'] as AutoFireState | undefined;
     if (!s) return;
     s.cooldownSeconds = Math.max(0, s.cooldownSeconds - deltaSeconds);
-
     if (s.cooldownSeconds > 0) return;
 
-    // Resolve the turret's world position. The qualified slot id encodes
-    // the carIndex; the slot id resolves on the car's slot list.
-    const [carIndexStr, slotId] = handle.qualifiedSlotId.split(':');
-    const carIndex = Number(carIndexStr);
-    const car = ctx.train.getCar(carIndex);
-    if (!car) return;
-    const slot = car.data.slots.find((sl) => sl.id === slotId);
-    if (!slot) return;
+    const pos = turretWorldPos(handle, ctx);
+    if (!pos) return;
 
-    const fireRate = (handle.data.behavior.fireRate as number | undefined) ?? 1.0;
-    const damage = (handle.data.behavior.damage as number | undefined) ?? 1;
+    const fireRate = getNumStat(handle.data.behavior, 'fireRate', 1.0);
+    const damage = getNumStat(handle.data.behavior, 'damage', 1);
 
-    const fired = ctx.combat.fireFrom(car.x + slot.x, car.y + slot.y, damage);
-    if (fired) {
-      s.cooldownSeconds = 1 / fireRate;
-    }
+    const fired = ctx.combat.fireFrom(pos.x, pos.y, damage);
+    if (fired) s.cooldownSeconds = 1 / fireRate;
     // If no target in range, leave cooldown at 0 so we'll fire as soon as one appears.
   },
 };
 
 moduleBehaviors.register('auto-fire', autoFireHandler);
+
+// ─── Beam (continuous-damage line at nearest target in range) ─────────────
+
+interface BeamState {
+  lineGraphics?: Phaser.GameObjects.Graphics;
+}
+
+const beamHandler: BehaviorHandler = {
+  init(handle) {
+    handle.state['beam'] = {} as BeamState;
+  },
+  update(deltaSeconds, handle, ctx) {
+    const s = handle.state['beam'] as BeamState | undefined;
+    if (!s) return;
+
+    const pos = turretWorldPos(handle, ctx);
+    if (!pos) return;
+
+    const range = getNumStat(handle.data.behavior, 'range', 200);
+    const dps = getNumStat(handle.data.behavior, 'damagePerSecond', 5);
+    const colorHex = getStrStat(handle.data.behavior, 'color', '#ff8040');
+
+    const target = ctx.combat.findClosestEnemy(pos.x, pos.y, range);
+    if (target) ctx.combat.damageEnemy(target, dps * deltaSeconds);
+
+    if (!s.lineGraphics) {
+      s.lineGraphics = ctx.scene.add.graphics();
+      s.lineGraphics.setDepth(40);
+    }
+    s.lineGraphics.clear();
+    if (target) {
+      const color = parseHexColor(colorHex);
+      s.lineGraphics.lineStyle(2, color, 0.85);
+      s.lineGraphics.lineBetween(pos.x, pos.y, target.x, target.y);
+      // Soft halo
+      s.lineGraphics.lineStyle(5, color, 0.18);
+      s.lineGraphics.lineBetween(pos.x, pos.y, target.x, target.y);
+    }
+  },
+  destroy(handle) {
+    const s = handle.state['beam'] as BeamState | undefined;
+    s?.lineGraphics?.destroy();
+  },
+};
+
+moduleBehaviors.register('beam', beamHandler);
+
+// ─── AOE pulse (periodic radial blast at target location) ─────────────────
+
+interface PulseState {
+  cooldownSeconds: number;
+}
+
+const aoePulseHandler: BehaviorHandler = {
+  init(handle) {
+    handle.state['aoe-pulse'] = { cooldownSeconds: 0 } satisfies PulseState;
+  },
+  update(deltaSeconds, handle, ctx) {
+    const s = handle.state['aoe-pulse'] as PulseState | undefined;
+    if (!s) return;
+    s.cooldownSeconds = Math.max(0, s.cooldownSeconds - deltaSeconds);
+    if (s.cooldownSeconds > 0) return;
+
+    const pos = turretWorldPos(handle, ctx);
+    if (!pos) return;
+
+    const fireRate = getNumStat(handle.data.behavior, 'fireRate', 0.5);
+    const damage = getNumStat(handle.data.behavior, 'damage', 20);
+    const radius = getNumStat(handle.data.behavior, 'radius', 80);
+    const range = getNumStat(handle.data.behavior, 'range', 500);
+    const colorHex = getStrStat(handle.data.behavior, 'color', '#ff6020');
+
+    const target = ctx.combat.findClosestEnemy(pos.x, pos.y, range);
+    if (!target) return;
+
+    ctx.combat.firePulse(target.x, target.y, radius, damage, parseHexColor(colorHex));
+    s.cooldownSeconds = 1 / fireRate;
+  },
+};
+
+moduleBehaviors.register('aoe-pulse', aoePulseHandler);
+
+// ─── Support aura (passive aura around the turret) ────────────────────────
+//
+// v0: renders a pulsing range circle. The actual effect (shield damage
+// reduction, repair-over-time) is a no-op here because cars don't take
+// damage in Phase 3. Phase 4.X (boss/encounter system) will land car damage
+// and this handler will gain `effect: 'shield' | 'repair'` dispatch.
+
+interface AuraState {
+  auraGraphics?: Phaser.GameObjects.Graphics;
+  pulsePhase: number;
+}
+
+const supportAuraHandler: BehaviorHandler = {
+  init(handle) {
+    handle.state['support-aura'] = { pulsePhase: 0 } satisfies AuraState;
+  },
+  update(deltaSeconds, handle, ctx) {
+    const s = handle.state['support-aura'] as AuraState | undefined;
+    if (!s) return;
+    s.pulsePhase = (s.pulsePhase + deltaSeconds) % 2;
+
+    const pos = turretWorldPos(handle, ctx);
+    if (!pos) return;
+
+    const range = getNumStat(handle.data.behavior, 'range', 100);
+    const colorHex = getStrStat(handle.data.behavior, 'color', '#a0d0ff');
+
+    if (!s.auraGraphics) {
+      s.auraGraphics = ctx.scene.add.graphics();
+      s.auraGraphics.setDepth(20);
+    }
+    const alpha = 0.12 + 0.08 * Math.sin(s.pulsePhase * Math.PI);
+    const color = parseHexColor(colorHex);
+    s.auraGraphics.clear();
+    s.auraGraphics.lineStyle(1, color, alpha + 0.15);
+    s.auraGraphics.strokeCircle(pos.x, pos.y, range);
+    s.auraGraphics.fillStyle(color, alpha * 0.3);
+    s.auraGraphics.fillCircle(pos.x, pos.y, range);
+  },
+  destroy(handle) {
+    const s = handle.state['support-aura'] as AuraState | undefined;
+    s?.auraGraphics?.destroy();
+  },
+};
+
+moduleBehaviors.register('support-aura', supportAuraHandler);

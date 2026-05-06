@@ -20,5 +20,210 @@
       "projectile": "kinetic-bolt",
       "targeting": "closest"
     }
+  },
+  "gatling": {
+    "id": "gatling",
+    "name": "Gatling",
+    "category": "kinetic",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#6a7090",
+      "stroke": "#0c1828",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -5, "w": 12, "h": 10 },
+        { "kind": "rect", "x": 6, "y": -3, "w": 8, "h": 2, "fill": "#9098b8" },
+        { "kind": "rect", "x": 6, "y": -1, "w": 8, "h": 2, "fill": "#9098b8" },
+        { "kind": "rect", "x": 6, "y": 1, "w": 8, "h": 2, "fill": "#9098b8" }
+      ]
+    },
+    "behavior": {
+      "kind": "auto-fire",
+      "fireRate": 4.0,
+      "damage": 3,
+      "projectile": "kinetic-bolt",
+      "targeting": "closest"
+    }
+  },
+  "flamethrower": {
+    "id": "flamethrower",
+    "name": "Flamethrower",
+    "category": "fire",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#a04020",
+      "stroke": "#401008",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -7, "y": -3, "w": 11, "h": 6 },
+        { "kind": "tri", "points": [[4, -5], [13, 0], [4, 5]], "fill": "#e06030" }
+      ]
+    },
+    "behavior": {
+      "kind": "beam",
+      "damagePerSecond": 10,
+      "range": 220,
+      "color": "#ff5020"
+    }
+  },
+  "plasma-torch": {
+    "id": "plasma-torch",
+    "name": "Plasma Torch",
+    "category": "fire",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#a04060",
+      "stroke": "#401020",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -4, "w": 10, "h": 8 },
+        { "kind": "circle", "x": -1, "y": 0, "r": 3, "fill": "#ffa080" },
+        { "kind": "tri", "points": [[4, -5], [14, 0], [4, 5]], "fill": "#ff8060" }
+      ]
+    },
+    "behavior": {
+      "kind": "beam",
+      "damagePerSecond": 18,
+      "range": 280,
+      "color": "#ff8060"
+    }
+  },
+  "freeze-beam": {
+    "id": "freeze-beam",
+    "name": "Freeze Beam",
+    "category": "cryo",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#4080a0",
+      "stroke": "#102030",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -7, "y": -2, "w": 13, "h": 4 },
+        { "kind": "tri", "points": [[6, -4], [14, 0], [6, 4]], "fill": "#a0d8ff" }
+      ]
+    },
+    "behavior": {
+      "kind": "beam",
+      "damagePerSecond": 5,
+      "range": 320,
+      "color": "#80c0ff"
+    }
+  },
+  "ice-mortar": {
+    "id": "ice-mortar",
+    "name": "Ice Mortar",
+    "category": "cryo",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#5080a0",
+      "stroke": "#102030",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -8, "w": 12, "h": 12 },
+        { "kind": "rect", "x": -4, "y": -10, "w": 8, "h": 4, "fill": "#a0d8ff" }
+      ]
+    },
+    "behavior": {
+      "kind": "aoe-pulse",
+      "fireRate": 0.4,
+      "damage": 15,
+      "radius": 100,
+      "range": 500,
+      "color": "#a0d8ff"
+    }
+  },
+  "missile": {
+    "id": "missile",
+    "name": "Missile",
+    "category": "explosive",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#a05030",
+      "stroke": "#301810",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -8, "y": -2, "w": 14, "h": 4 },
+        { "kind": "tri", "points": [[6, -3], [12, 0], [6, 3]], "fill": "#ffa040" },
+        { "kind": "tri", "points": [[-8, -2], [-12, -5], [-8, 0]] },
+        { "kind": "tri", "points": [[-8, 2], [-12, 5], [-8, 0]] }
+      ]
+    },
+    "behavior": {
+      "kind": "aoe-pulse",
+      "fireRate": 0.3,
+      "damage": 35,
+      "radius": 90,
+      "range": 600,
+      "color": "#ff8040"
+    }
+  },
+  "lightning": {
+    "id": "lightning",
+    "name": "Lightning",
+    "category": "electric",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#508080",
+      "stroke": "#102030",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -6, "y": -3, "w": 9, "h": 6 },
+        { "kind": "tri", "points": [[3, -4], [9, -1], [4, 0]], "fill": "#a0f0ff" },
+        { "kind": "tri", "points": [[4, 0], [10, 4], [6, 1]], "fill": "#a0f0ff" }
+      ]
+    },
+    "behavior": {
+      "kind": "beam",
+      "damagePerSecond": 14,
+      "range": 260,
+      "color": "#a0f0ff"
+    }
+  },
+  "shield-emitter": {
+    "id": "shield-emitter",
+    "name": "Shield Emitter",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#4080a0",
+      "stroke": "#102030",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
+        { "kind": "circle", "x": 0, "y": -1, "r": 6 },
+        { "kind": "circle", "x": 0, "y": -1, "r": 4, "fill": "#80b0d0" },
+        { "kind": "circle", "x": 0, "y": -1, "r": 2, "fill": "#e0f0ff" }
+      ]
+    },
+    "behavior": {
+      "kind": "support-aura",
+      "effect": "shield",
+      "magnitude": 0.5,
+      "range": 140,
+      "color": "#a0d0ff"
+    }
+  },
+  "repair-drone": {
+    "id": "repair-drone",
+    "name": "Repair Drone",
+    "category": "support",
+    "allowedSlots": ["top"],
+    "render": {
+      "fill": "#408060",
+      "stroke": "#103020",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "rect", "x": -5, "y": 0, "w": 10, "h": 5 },
+        { "kind": "rect", "x": -1, "y": -8, "w": 2, "h": 10, "fill": "#a0ffa0" },
+        { "kind": "rect", "x": -5, "y": -3, "w": 10, "h": 2, "fill": "#a0ffa0" }
+      ]
+    },
+    "behavior": {
+      "kind": "support-aura",
+      "effect": "repair",
+      "magnitude": 2,
+      "range": 120,
+      "color": "#a0ffa0"
+    }
   }
 }

@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 4 Task 4.1.1 complete — items architecture in place)
-> Build phase: 4 (core systems — Tasks 4.1, 4.1.1 done)
+> Last updated: 2026-05-05 by claude (Phase 4 Task 4.2 complete — 10 turrets across all 4 archetypes)
+> Build phase: 4 (core systems — Tasks 4.1, 4.1.1, 4.2 done)
 > v1 ETA: 2026-07-15
 
 ## Current build status
@@ -10,7 +10,7 @@
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
-- Phase 4 core systems: 🚧 (4.1 ✅, 4.1.1 ✅, 4.2 next — 10 turrets)
+- Phase 4 core systems: 🚧 (4.1 ✅, 4.1.1 ✅, 4.2 ✅, 4.2.1 next — runtime item composition)
 - Phase 4 core systems: ⏳
 - Phase 5 content + polish: ⏳
 - Phase 6 launch prep: ⏳
@@ -19,6 +19,7 @@
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.2: 10 turrets across 4 archetypes.** modules.json expanded from 1 → 10: kinetic (basic-cannon, gatling), fire (flamethrower, plasma-torch), cryo (freeze-beam, ice-mortar), explosive (missile), electric (lightning), support (shield-emitter, repair-drone). Three new behavior handlers in `moduleBehaviors.ts`: **beam** (persistent line graphics, dps×dt damage, range gating), **aoe-pulse** (cooldown-driven, finds target via closest-in-range, calls `firePulse`), **support-aura** (pulsing range circle, effect-side stub until cars take damage in Phase 4.X). CombatSystem API expanded: public `findClosestEnemy`, `enemiesInRadius`, `damageEnemy`, `firePulse` — all thin wrappers around pure `closestTarget`/`targetsInRadius` from new `combatMath.ts`. Projectile collision refactored to use `damageEnemy` (consistency). Shared helpers in moduleBehaviors: `turretWorldPos`, typed `getNumStat`/`getStrStat` (addresses Phase 3 audit NIT — `as number | undefined` casts replaced; Phase 4.2.1 will swap these for item-composed reads). RunScene attaches 8 of 10 turrets across the 4 archetypes for visual verification. HUD now shows `Train: 5/8 · Turrets: 8/10`. **116/116 unit pass** (+10 combatMath, plus existing tests after refactor), **3/3 E2E pass**, TS strict. Visual confirms all 8 attached turrets render distinctly + shield-emitter aura visible as large translucent circle. **Caught in flight:** I wrote a self-contradictory test assertion (`toContain` on an item I'd noted was outside the radius); caught by failing run, fixed in same task. | 116 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.1.1: items architecture (no runtime).** Per ADR-002. New types in `src/lib/types.ts`: `ItemData`, `ItemEffect`, `ItemStat` (damage/fireRate/projectileCount/pierce/range/critChance), `ItemEffectOp` (add/multiply/set), `ItemCategory`. Added optional `maxStack?: number` to `ModuleData` (default 3 v1). `src/data/items.json` skeleton with 3 representative items: `rivet-rounds` (+5 damage, stackCap 3), `auto-loader` (+0.5 fireRate, stackCap 2), `split-shot` (+1 projectileCount, stackCap 2). `src/lib/itemValidators.ts` with pure `canStackItem(turret, item, currentItems)` — three guards: appliesTo gating, turret max-stack, per-item stackCap. `src/lib/itemStackTracker.ts` with pure `Map<QualifiedSlotId, ItemData[]>` (multiple items per slot, vs AttachmentTracker's single module per slot). Qualified-slot keys reused — Phase 4 multi-WeaponCar isolation maintained. **No runtime usage** — Task 4.2.1 wires the Phaser-aware ItemAttachmentSystem and CombatSystem stat composition. **106/106 unit pass** (+22: 14 itemValidators + 8 itemStackTracker), TS clean. | 106 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.1: 5 car types rendering.** Replaced 4 stub car entries with full data (slot positions per ADR-001 §Gap 1, distinct vector silhouettes). Engine (slate-blue + smokestack + cab + cannon attached, 2 top slots), Weapon Car (dark gray + 3 mount stubs, 3 top slots), Armor Car (rust + heavy plating + rivets + thicker stroke, 2 top slots), Crew Car (green + 3 portholes, 1 top slot), Cargo Car (brown + open-top with cargo boxes, 0 slots). Default v1 train = `[Engine, Weapon, Armor, Crew, Cargo]` per build plan. HUD now shows `Train: 5/8`. New Vitest test verifies full 5-car layout fits 1280×720 (positions 200, 304, 408, 512, 616; train extends to x≈664). Used 96px uniform width + 8px gap from existing trainLayout math; no architectural changes. **84/84 unit pass** (+1 layout test), **3/3 E2E pass** (combat loop + persistence still green). Visual screenshot confirms each car is immediately distinguishable. | 84 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 3 Task 3.7: end-of-phase audit (CLOSES PHASE 3).** Independent advisor reviewer pass + synthesis. Findings logged in REVIEW_NOTES.md as a "Phase 3 end-of-phase review" section across 5 dimensions (architecture/scale, coverage, DESIGN drift, code smells, perf). **0 BLOCKER, 0 NEEDS-CHANGE** — clean gate. 16 NIT items deferred to Phase 4 / 5 / 6. **10 issues caught & fixed in flight** during Phase 3 (4 advisor pre-flights, 2 reviewer-pass NEEDS-CHANGE in 3.4, 2 in 3.5, 1 audit-finding refactor pre-3.4, 1 index.html audit catch). Build plan's specific 3.4 gate question ("can slot system scale to 30+ modules / 5 car types?") explicitly answered: OK-AS-IS. CLAUDE.md updated with: (a) testing policy (pure helpers unit-tested, Phaser shells via E2E — intentional), (b) permission-rule caching constraint (deny rules cached at session start, `Bash(node *)` allow lets subprocess-bypass; subagent worktree-isolation is the real boundary). Push committed via `node spawnSync` workaround documented. | 83 unit ✅ · 3 E2E ✅ |
@@ -36,10 +37,9 @@
 
 ## Next priorities (queue, ordered) — Phase 4 in progress
 
-1. **READY** — Phase 4 Task 4.2: 10 modules (turrets) across categories. 2 kinetic, 2 fire, 2 cryo, 1 explosive, 1 electric, 2 support. JSON-only per established pattern. Each turret declares `behavior.kind` from {auto-fire, beam, aoe-pulse, support-aura} archetypes; tuning data composed against item modifiers in Phase 4.2.1.
-2. **GATED ON 4.2** — Phase 4 Task 4.2.1 (slotted per ADR-002): ItemAttachmentSystem (Phaser shell, stacked-silhouette rendering using existing `drawRecipe`); CombatSystem composes effective turret stats from base ⊕ items per frame. Engineering Bay UI (later) feeds items into the tracker.
-3. **GATED ON 4.2.1** — Phase 4 Task 4.3: PowerSystem with FTL-style UI.
-4. **(continues per build plan Phase 4 sequence — Tasks 4.4 crew, 4.5 slow-time, 4.6 enemies+boss, 4.7 encounters, 4.8 environment matrix, 4.9 hub, 4.10 save v2)**
+1. **READY** — Phase 4 Task 4.2.1 (slotted per ADR-002): ItemAttachmentSystem (Phaser shell, stacked-silhouette rendering using existing `drawRecipe`); replace `getNumStat(behavior, key, fallback)` direct reads in handlers with `getEffectiveStat(handle, items, key)` that composes item effects (`add` → +n, `multiply` → ×n, `set` → =n). RunScene wires a 1-2 item demo onto basic-cannon for visual proof.
+2. **GATED ON 4.2.1** — Phase 4 Task 4.3: PowerSystem with FTL-style UI.
+3. **(continues per build plan Phase 4 sequence — Tasks 4.4 crew, 4.5 slow-time, 4.6 enemies+boss, 4.7 encounters, 4.8 environment matrix, 4.9 hub, 4.10 save v2)**
 
 ## Open questions for human (Josh)
 

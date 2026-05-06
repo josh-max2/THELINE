@@ -41,11 +41,19 @@ export class RunScene extends Phaser.Scene {
     this.combat = new CombatSystem(this, this.enemySpawner);
 
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
-    // Phase 4 Task 4.2 will populate the other turret slots; for now only the engine has a cannon.
-    this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');
+    // Phase 4 Task 4.2: showcase 8 of 10 turrets across the 4 archetypes.
+    // (plasma-torch and repair-drone exist in modules.json; not on the demo train.)
+    this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');   // kinetic auto-fire
+    this.moduleSystem.attach(0, 'engine-top-2', 'gatling');        // kinetic auto-fire (rapid)
+    this.moduleSystem.attach(1, 'weapon-top-1', 'flamethrower');   // fire beam
+    this.moduleSystem.attach(1, 'weapon-top-2', 'missile');        // explosive aoe-pulse
+    this.moduleSystem.attach(1, 'weapon-top-3', 'lightning');      // electric beam
+    this.moduleSystem.attach(2, 'armor-top-1', 'shield-emitter');  // support aura
+    this.moduleSystem.attach(2, 'armor-top-2', 'freeze-beam');     // cryo beam
+    this.moduleSystem.attach(3, 'crew-top-1', 'ice-mortar');       // cryo aoe-pulse
 
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.1 (5 cars)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.2 (10 turrets)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -53,7 +61,7 @@ export class RunScene extends Phaser.Scene {
       .setDepth(100);
 
     this.add
-      .text(16, 32, `Train: ${this.trainSystem.length}/8`, {
+      .text(16, 32, `Train: ${this.trainSystem.length}/8 · Turrets: ${this.moduleSystem.attachmentCount}/10`, {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
