@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import type { EnemySpawner, ActiveEnemy } from './EnemySpawner';
 import { salvageStore } from '../lib/salvageStore';
 import { closestTarget, targetsInRadius } from '../lib/combatMath';
+import type { EffectsSystem } from './EffectsSystem';
+import { shakeTierForKill } from '../lib/shakeMath';
 
 interface Projectile {
   x: number;
@@ -30,10 +32,16 @@ export class CombatSystem {
   private readonly scene: Phaser.Scene;
   private readonly enemies: EnemySpawner;
   private readonly projectiles: Projectile[] = [];
+  private effects?: EffectsSystem;
 
   constructor(scene: Phaser.Scene, enemies: EnemySpawner) {
     this.scene = scene;
     this.enemies = enemies;
+  }
+
+  /** Wire EffectsSystem (Task 5.5) — visual juice on hits / kills / fire. */
+  bindEffects(effects: EffectsSystem): void {
+    this.effects = effects;
   }
 
   /**
@@ -43,6 +51,7 @@ export class CombatSystem {
   fireFrom(x: number, y: number, damage: number): boolean {
     const target = this.findClosestEnemy(x, y);
     if (!target) return false;
+    this.effects?.spawnMuzzleFlash(x, y, target.x, target.y);
     return this.fireProjectile(x, y, target, damage);
   }
 
@@ -56,11 +65,21 @@ export class CombatSystem {
     return targetsInRadius(this.enemies.list, x, y, radius);
   }
 
-  /** Apply damage to an enemy. Awards Salvage on kill. */
+  /**
+   * Apply damage to an enemy. Awards Salvage on kill.
+   *
+   * Hit flash is intentionally NOT spawned here — beam handlers call this
+   * every frame with `dps * dt`, and a 60fps flash spam tanks framerate
+   * (Task 5.5 advisor catch). Discrete events (projectile hit) spawn the
+   * flash at their own call site; beams have their own line-graphic visual.
+   */
   damageEnemy(enemy: ActiveEnemy, amount: number): void {
     if (amount <= 0) return;
     enemy.hp -= amount;
     if (enemy.hp <= 0) {
+      // Kill burst tinted by enemy render fill — matches its silhouette color.
+      this.effects?.spawnKillBurst(enemy.x, enemy.y, enemy.data.render.fill);
+      this.effects?.shake(shakeTierForKill({ hp: enemy.data.hp, isBoss: enemy.data.isBoss }));
       this.enemies.destroy(enemy);
       salvageStore.add(1);
     }
@@ -139,6 +158,10 @@ export class CombatSystem {
       if (hit) {
         p.graphics.destroy();
         this.projectiles.splice(i, 1);
+        // Discrete impact event — flash here (NOT in damageEnemy, which beams
+        // call per-frame). Spawned BEFORE damageEnemy so a kill still gets
+        // both the flash and the kill burst this frame.
+        this.effects?.spawnHitFlash(hit.x, hit.y);
         this.damageEnemy(hit, p.damage);
       }
     }

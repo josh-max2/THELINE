@@ -4,6 +4,7 @@ import { ModuleAttachmentSystem } from '../systems/ModuleAttachmentSystem';
 import { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
 import { EnemySpawner } from '../systems/EnemySpawner';
 import { CombatSystem } from '../systems/CombatSystem';
+import { EffectsSystem } from '../systems/EffectsSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { PowerSystem } from '../systems/PowerSystem';
 import { CrewSystem } from '../systems/CrewSystem';
@@ -35,6 +36,7 @@ export class RunScene extends Phaser.Scene {
   private crewPanel!: CrewPanel;
   private slowTime!: SlowTimeSystem;
   private environment!: EnvironmentSystem;
+  private effects!: EffectsSystem;
   private encounters!: EncounterSystem;
   private encounterText!: Phaser.GameObjects.Text;
   private unsubscribeEncounters?: () => void;
@@ -61,6 +63,8 @@ export class RunScene extends Phaser.Scene {
 
     this.enemySpawner = new EnemySpawner(this);
     this.combat = new CombatSystem(this, this.enemySpawner);
+    this.effects = new EffectsSystem(this);
+    this.combat.bindEffects(this.effects);
 
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
     this.itemSystem = new ItemAttachmentSystem(this, this.trainSystem);
