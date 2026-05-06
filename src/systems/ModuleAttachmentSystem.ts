@@ -9,6 +9,7 @@ import { AttachmentTracker } from '../lib/attachmentTracker';
 import { moduleBehaviors, type AttachedModuleHandle, type BehaviorContext } from '../lib/moduleBehaviors';
 import type { TrainSystem } from './TrainSystem';
 import type { CombatSystem } from './CombatSystem';
+import type { ItemAttachmentSystem } from './ItemAttachmentSystem';
 
 const MODULES = modulesDataRaw as unknown as Record<string, ModuleData>;
 
@@ -31,11 +32,22 @@ export class ModuleAttachmentSystem {
   private readonly combat: CombatSystem;
   private readonly tracker = new AttachmentTracker();
   private readonly phaserAttachments = new Map<string, PhaserAttachment>();
+  private items?: ItemAttachmentSystem;
 
   constructor(scene: Phaser.Scene, train: TrainSystem, combat: CombatSystem) {
     this.scene = scene;
     this.train = train;
     this.combat = combat;
+  }
+
+  /** Resolves the IAS↔MAS cycle. Throws on update() if not bound. */
+  bindItemSystem(items: ItemAttachmentSystem): void {
+    this.items = items;
+  }
+
+  /** Read the turret data at a qualified slot. Used by IAS during attach validation. */
+  getModuleAt(qualifiedSlotId: import('../lib/types').QualifiedSlotId): import('../lib/types').ModuleData | undefined {
+    return this.tracker.getAttached(qualifiedSlotId);
   }
 
   /**
@@ -90,6 +102,8 @@ export class ModuleAttachmentSystem {
       ?.destroy?.(phaserAttachment.handle, this.context());
     phaserAttachment.graphics.destroy();
     this.phaserAttachments.delete(qualifiedSlotId);
+    // Detach any items stacked on this turret (lifecycle hook).
+    this.items?.detachAllAt(qualifiedSlotId);
     return this.tracker.detach(qualifiedSlotId);
   }
 
@@ -139,6 +153,9 @@ export class ModuleAttachmentSystem {
   }
 
   private context(): BehaviorContext {
-    return { scene: this.scene, train: this.train, combat: this.combat };
+    if (!this.items) {
+      throw new Error('ModuleAttachmentSystem.bindItemSystem(...) must be called before update()');
+    }
+    return { scene: this.scene, train: this.train, combat: this.combat, items: this.items };
   }
 }

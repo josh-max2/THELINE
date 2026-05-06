@@ -14,13 +14,15 @@ import type Phaser from 'phaser';
 import type { BehaviorKind, ModuleData, QualifiedSlotId } from './types';
 import type { TrainSystem } from '../systems/TrainSystem';
 import type { CombatSystem } from '../systems/CombatSystem';
+import type { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
+import { composeStats, getNumStat, getStrStat } from './composeStats';
 
 /** Per-frame context passed to every active behavior. */
 export interface BehaviorContext {
   scene: Phaser.Scene;
   train: TrainSystem;
   combat: CombatSystem;
-  // Phase 4 will add EnemySpawner directly when item-modified targeting needs it.
+  items: ItemAttachmentSystem;
 }
 
 /** A live attachment as the registry sees it. */
@@ -78,18 +80,12 @@ function turretWorldPos(
 }
 
 /**
- * Typed read of a numeric tuning stat from behavior data.
- * Phase 4 Task 4.2.1 swaps this for `getEffectiveStat(handle, items, key)`
- * that composes item modifiers — addresses Phase 3 audit NIT.
+ * Compose effective stats for a turret: base behavior data ⊕ stacked items.
+ * Result is a flat key-map handlers can read with getNumStat/getStrStat.
+ * Per ADR-002 Phase 4.2.1.
  */
-function getNumStat(behavior: ModuleData['behavior'], key: string, fallback: number): number {
-  const v = behavior[key];
-  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
-}
-
-function getStrStat(behavior: ModuleData['behavior'], key: string, fallback: string): string {
-  const v = behavior[key];
-  return typeof v === 'string' ? v : fallback;
+function effectiveStats(handle: AttachedModuleHandle, ctx: BehaviorContext) {
+  return composeStats(handle.data.behavior, ctx.items.itemsAt(handle.qualifiedSlotId));
 }
 
 function parseHexColor(hex: string): number {
@@ -121,8 +117,9 @@ const autoFireHandler: BehaviorHandler = {
     const pos = turretWorldPos(handle, ctx);
     if (!pos) return;
 
-    const fireRate = getNumStat(handle.data.behavior, 'fireRate', 1.0);
-    const damage = getNumStat(handle.data.behavior, 'damage', 1);
+    const stats = effectiveStats(handle, ctx);
+    const fireRate = getNumStat(stats, 'fireRate', 1.0);
+    const damage = getNumStat(stats, 'damage', 1);
 
     const fired = ctx.combat.fireFrom(pos.x, pos.y, damage);
     if (fired) s.cooldownSeconds = 1 / fireRate;
@@ -149,9 +146,10 @@ const beamHandler: BehaviorHandler = {
     const pos = turretWorldPos(handle, ctx);
     if (!pos) return;
 
-    const range = getNumStat(handle.data.behavior, 'range', 200);
-    const dps = getNumStat(handle.data.behavior, 'damagePerSecond', 5);
-    const colorHex = getStrStat(handle.data.behavior, 'color', '#ff8040');
+    const stats = effectiveStats(handle, ctx);
+    const range = getNumStat(stats, 'range', 200);
+    const dps = getNumStat(stats, 'damagePerSecond', 5);
+    const colorHex = getStrStat(stats, 'color', '#ff8040');
 
     const target = ctx.combat.findClosestEnemy(pos.x, pos.y, range);
     if (target) ctx.combat.damageEnemy(target, dps * deltaSeconds);
@@ -197,11 +195,12 @@ const aoePulseHandler: BehaviorHandler = {
     const pos = turretWorldPos(handle, ctx);
     if (!pos) return;
 
-    const fireRate = getNumStat(handle.data.behavior, 'fireRate', 0.5);
-    const damage = getNumStat(handle.data.behavior, 'damage', 20);
-    const radius = getNumStat(handle.data.behavior, 'radius', 80);
-    const range = getNumStat(handle.data.behavior, 'range', 500);
-    const colorHex = getStrStat(handle.data.behavior, 'color', '#ff6020');
+    const stats = effectiveStats(handle, ctx);
+    const fireRate = getNumStat(stats, 'fireRate', 0.5);
+    const damage = getNumStat(stats, 'damage', 20);
+    const radius = getNumStat(stats, 'radius', 80);
+    const range = getNumStat(stats, 'range', 500);
+    const colorHex = getStrStat(stats, 'color', '#ff6020');
 
     const target = ctx.combat.findClosestEnemy(pos.x, pos.y, range);
     if (!target) return;
@@ -240,8 +239,9 @@ const supportAuraHandler: BehaviorHandler = {
     const pos = turretWorldPos(handle, ctx);
     if (!pos) return;
 
-    const range = getNumStat(handle.data.behavior, 'range', 100);
-    const colorHex = getStrStat(handle.data.behavior, 'color', '#a0d0ff');
+    const stats = effectiveStats(handle, ctx);
+    const range = getNumStat(stats, 'range', 100);
+    const colorHex = getStrStat(stats, 'color', '#a0d0ff');
 
     if (!s.auraGraphics) {
       s.auraGraphics = ctx.scene.add.graphics();

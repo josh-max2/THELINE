@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { TrainSystem } from '../systems/TrainSystem';
 import { ModuleAttachmentSystem } from '../systems/ModuleAttachmentSystem';
+import { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
 import { EnemySpawner } from '../systems/EnemySpawner';
 import { CombatSystem } from '../systems/CombatSystem';
 import { SaveSystem } from '../systems/SaveSystem';
@@ -14,6 +15,7 @@ export const WORLD_VELOCITY_PX_PER_SEC = 50;
 export class RunScene extends Phaser.Scene {
   private trainSystem!: TrainSystem;
   private moduleSystem!: ModuleAttachmentSystem;
+  private itemSystem!: ItemAttachmentSystem;
   private enemySpawner!: EnemySpawner;
   private combat!: CombatSystem;
   private saveSystem!: SaveSystem;
@@ -41,8 +43,12 @@ export class RunScene extends Phaser.Scene {
     this.combat = new CombatSystem(this, this.enemySpawner);
 
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
+    this.itemSystem = new ItemAttachmentSystem(this, this.trainSystem);
+    // Resolve the IAS↔MAS reference cycle.
+    this.moduleSystem.bindItemSystem(this.itemSystem);
+    this.itemSystem.bindModuleSystem(this.moduleSystem);
+
     // Phase 4 Task 4.2: showcase 8 of 10 turrets across the 4 archetypes.
-    // (plasma-torch and repair-drone exist in modules.json; not on the demo train.)
     this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');   // kinetic auto-fire
     this.moduleSystem.attach(0, 'engine-top-2', 'gatling');        // kinetic auto-fire (rapid)
     this.moduleSystem.attach(1, 'weapon-top-1', 'flamethrower');   // fire beam
@@ -52,8 +58,13 @@ export class RunScene extends Phaser.Scene {
     this.moduleSystem.attach(2, 'armor-top-2', 'freeze-beam');     // cryo beam
     this.moduleSystem.attach(3, 'crew-top-1', 'ice-mortar');       // cryo aoe-pulse
 
+    // Phase 4 Task 4.2.1 demo: stack 2 items on basic-cannon.
+    // Effects: damage 10 + 5 = 15; fireRate 1.0 + 0.5 = 1.5.
+    this.itemSystem.attach(0, 'engine-top-1', 'rivet-rounds');
+    this.itemSystem.attach(0, 'engine-top-1', 'auto-loader');
+
     this.add
-      .text(16, 16, 'THE LINE — Phase 4 · Task 4.2 (10 turrets)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.2.1 (items composed)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -61,11 +72,12 @@ export class RunScene extends Phaser.Scene {
       .setDepth(100);
 
     this.add
-      .text(16, 32, `Train: ${this.trainSystem.length}/8 · Turrets: ${this.moduleSystem.attachmentCount}/10`, {
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#7b8aa3',
-      })
+      .text(
+        16,
+        32,
+        `Train: ${this.trainSystem.length}/8 · Turrets: ${this.moduleSystem.attachmentCount}/10 · Items: ${this.itemSystem.totalItems}`,
+        { fontFamily: 'monospace', fontSize: '12px', color: '#7b8aa3' },
+      )
       .setDepth(100);
 
     this.salvageText = this.add
@@ -90,6 +102,7 @@ export class RunScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribeSalvage?.();
       this.moduleSystem.destroyAll();
+      this.itemSystem.destroyAll();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });
