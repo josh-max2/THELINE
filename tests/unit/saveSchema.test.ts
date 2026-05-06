@@ -7,27 +7,28 @@ import {
   isValidV2,
   isValidV3,
   isValidV4,
+  isValidV5,
   migrateSave,
   __registerTestMigrationV0toV1,
 } from '../../src/lib/saveSchema';
 
 describe('saveSchema constants', () => {
-  test('CURRENT_SAVE_VERSION is 4 (Phase 5 Task 5.6)', () => {
-    expect(CURRENT_SAVE_VERSION).toBe(4);
+  test('CURRENT_SAVE_VERSION is 5 (Phase 5 Task 5.8)', () => {
+    expect(CURRENT_SAVE_VERSION).toBe(5);
   });
 });
 
 describe('createNewSave', () => {
-  test('produces a valid v4 save', () => {
+  test('produces a valid v5 save', () => {
     const save = createNewSave();
-    expect(save.saveVersion).toBe(4);
+    expect(save.saveVersion).toBe(5);
     expect(save.totalSalvage).toBe(0);
     expect(typeof save.lastSaved).toBe('string');
     expect(new Date(save.lastSaved).toString()).not.toBe('Invalid Date');
-    expect(isValidV4(save)).toBe(true);
+    expect(isValidV5(save)).toBe(true);
   });
 
-  test('includes default hubState with empty purchasedTechIds + audio defaults', () => {
+  test('includes default hubState with idle-income + auto-run fields', () => {
     const save = createNewSave();
     expect(save.hubState.modulesOwned).toContain('basic-cannon');
     expect(save.hubState.crewRoster).toHaveLength(4);
@@ -36,6 +37,8 @@ describe('createNewSave', () => {
     expect(save.hubState.purchasedTechIds).toEqual([]);
     expect(save.hubState.audioMuted).toBe(false);
     expect(typeof save.hubState.audioVolume).toBe('number');
+    expect(save.hubState.lastHubExitMs).toBe(0);
+    expect(save.hubState.autoRunEnabled).toBe(false);
   });
 });
 
@@ -139,8 +142,23 @@ describe('isValidV3', () => {
 });
 
 describe('isValidV4', () => {
-  test('accepts a well-formed v4 save (current)', () => {
-    expect(isValidV4(createNewSave())).toBe(true);
+  test('accepts a well-formed v4 save (legacy)', () => {
+    expect(
+      isValidV4({
+        saveVersion: 4,
+        totalSalvage: 0,
+        lastSaved: 'x',
+        hubState: {
+          modulesOwned: [],
+          crewRoster: [],
+          trainLayout: [],
+          completedRuns: 0,
+          purchasedTechIds: [],
+          audioMuted: false,
+          audioVolume: 0.5,
+        },
+      }),
+    ).toBe(true);
   });
 
   test('rejects v3 saves (missing audio fields)', () => {
@@ -160,26 +178,55 @@ describe('isValidV4', () => {
     ).toBe(false);
   });
 
-  test('rejects malformed audioMuted (not a boolean)', () => {
+  test('rejects v5 saves (different version)', () => {
+    expect(isValidV4(createNewSave())).toBe(false);
+  });
+});
+
+describe('isValidV5', () => {
+  test('accepts a well-formed v5 save (current)', () => {
+    expect(isValidV5(createNewSave())).toBe(true);
+  });
+
+  test('rejects v4 saves (missing idle/auto-run fields)', () => {
+    expect(
+      isValidV5({
+        saveVersion: 4,
+        totalSalvage: 0,
+        lastSaved: 'x',
+        hubState: {
+          modulesOwned: [],
+          crewRoster: [],
+          trainLayout: [],
+          completedRuns: 0,
+          purchasedTechIds: [],
+          audioMuted: false,
+          audioVolume: 0.5,
+        },
+      }),
+    ).toBe(false);
+  });
+
+  test('rejects malformed lastHubExitMs (not a number)', () => {
     const fresh = createNewSave();
     // @ts-expect-error -- intentionally malformed
-    fresh.hubState.audioMuted = 'no';
-    expect(isValidV4(fresh)).toBe(false);
+    fresh.hubState.lastHubExitMs = 'soon';
+    expect(isValidV5(fresh)).toBe(false);
   });
 });
 
 describe('migrateSave — current-version round-trip', () => {
-  test('passes through a valid v4 save unchanged', () => {
-    const v4 = createNewSave();
-    expect(migrateSave(v4)).toEqual(v4);
+  test('passes through a valid v5 save unchanged', () => {
+    const v5 = createNewSave();
+    expect(migrateSave(v5)).toEqual(v5);
   });
 });
 
-describe('migrateSave — v1 → v4 chain', () => {
-  test('preserves totalSalvage from v1 → v4', () => {
+describe('migrateSave — v1 → v5 chain', () => {
+  test('preserves totalSalvage from v1 → v5', () => {
     const v1 = { saveVersion: 1, totalSalvage: 137, lastSaved: '2026-05-04T10:00:00Z' };
     const migrated = migrateSave(v1);
-    expect(migrated.saveVersion).toBe(4);
+    expect(migrated.saveVersion).toBe(5);
     expect(migrated.totalSalvage).toBe(137);
   });
 
@@ -189,20 +236,52 @@ describe('migrateSave — v1 → v4 chain', () => {
     expect(migrated.lastSaved).toBe('2026-05-04T10:00:00Z');
   });
 
-  test('v1 ends up with default v4 hubState (incl. audio defaults)', () => {
+  test('v1 ends up with default v5 hubState (incl. idle/auto-run defaults)', () => {
     const v1 = { saveVersion: 1, totalSalvage: 50, lastSaved: 'x' };
     const migrated = migrateSave(v1);
     expect(migrated.hubState).toEqual(defaultHubState());
-    expect(migrated.hubState.audioMuted).toBe(false);
+    expect(migrated.hubState.lastHubExitMs).toBe(0);
+    expect(migrated.hubState.autoRunEnabled).toBe(false);
   });
 
-  test('migrated chain produces a valid V4', () => {
+  test('migrated chain produces a valid V5', () => {
     const v1 = { saveVersion: 1, totalSalvage: 0, lastSaved: 'x' };
-    expect(isValidV4(migrateSave(v1))).toBe(true);
+    expect(isValidV5(migrateSave(v1))).toBe(true);
   });
 });
 
-describe('migrateSave — v3 → v4 (Task 5.6)', () => {
+describe('migrateSave — v4 → v5 (Task 5.8)', () => {
+  const v4 = {
+    saveVersion: 4,
+    totalSalvage: 75,
+    lastSaved: '2026-05-06T10:00:00Z',
+    hubState: {
+      modulesOwned: ['basic-cannon'],
+      crewRoster: [{ id: 0, color: '#fff' }],
+      trainLayout: ['engine', 'weapon'],
+      completedRuns: 1,
+      purchasedTechIds: ['t1-spare-parts'],
+      audioMuted: true,
+      audioVolume: 0.3,
+    },
+  };
+
+  test('preserves all v4 hubState fields', () => {
+    const m = migrateSave(v4);
+    expect(m.hubState.audioMuted).toBe(true);
+    expect(m.hubState.audioVolume).toBeCloseTo(0.3);
+    expect(m.hubState.purchasedTechIds).toEqual(['t1-spare-parts']);
+    expect(m.hubState.completedRuns).toBe(1);
+  });
+
+  test('seeds lastHubExitMs=0 + autoRunEnabled=false', () => {
+    const m = migrateSave(v4);
+    expect(m.hubState.lastHubExitMs).toBe(0);
+    expect(m.hubState.autoRunEnabled).toBe(false);
+  });
+});
+
+describe('migrateSave — v3 → v4 → v5 chain', () => {
   const v3 = {
     saveVersion: 3,
     totalSalvage: 50,
@@ -283,7 +362,7 @@ describe('migrateSave — error paths', () => {
   });
 });
 
-describe('migrateSave — framework chains v0 → v1 → v2 → v3 → v4', () => {
+describe('migrateSave — framework chains v0 → v1 → v2 → v3 → v4 → v5', () => {
   let unregister: (() => void) | undefined;
 
   afterEach(() => {
@@ -297,10 +376,10 @@ describe('migrateSave — framework chains v0 → v1 → v2 → v3 → v4', () =
     unregister = __registerTestMigrationV0toV1();
     const v0 = { saveVersion: 0, salvage: 99 };
     const migrated = migrateSave(v0);
-    expect(migrated.saveVersion).toBe(4);
+    expect(migrated.saveVersion).toBe(5);
     // v0→v1 maps `salvage` → `totalSalvage`; later migrations preserve it.
     expect(migrated.totalSalvage).toBe(99);
     expect(migrated.hubState).toEqual(defaultHubState());
-    expect(isValidV4(migrated)).toBe(true);
+    expect(isValidV5(migrated)).toBe(true);
   });
 });

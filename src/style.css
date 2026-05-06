@@ -163,7 +163,8 @@ body {
   font-size: 14px;
   color: #a0b8d0;
 }
-.hub-mute {
+.hub-mute,
+.hub-autorun {
   background: rgba(20, 30, 50, 0.6);
   border: 1px solid #2a3f5e;
   border-radius: 3px;
@@ -171,13 +172,30 @@ body {
   font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.06em;
   padding: 4px 10px;
-  margin-left: auto;
-  margin-right: 12px;
+  margin-right: 8px;
   cursor: pointer;
 }
-.hub-mute:hover {
+.hub-mute {
+  margin-left: auto;
+}
+.hub-mute:hover,
+.hub-autorun:hover {
   border-color: #4a90d8;
   color: #e0eafa;
+}
+.hub-idle-banner {
+  background: rgba(40, 100, 60, 0.5);
+  border: 1px solid #4a8060;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  color: #c0e8c0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  transition: opacity 1s ease-out;
+}
+.hub-idle-banner-fade {
+  opacity: 0;
 }
 .hub-grid {
   display: grid;

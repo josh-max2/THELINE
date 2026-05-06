@@ -10,6 +10,8 @@ import { audioSystem } from '../systems/AudioSystem';
 import { audioStore } from '../lib/audioStore';
 import { hasSeenTutorial } from '../lib/tutorialState';
 import { TutorialOverlay } from '../ui/tutorialOverlay';
+import { accruedSalvage } from '../lib/idleIncomeMath';
+import { autoRunStore } from '../lib/autoRunStore';
 
 /**
  * Between-run UI. Per DESIGN §10 + build plan Task 4.9 + Task 5.3.
@@ -51,6 +53,18 @@ export class HubScene extends Phaser.Scene {
       this.techTree?.loadFromSave(data.hubState.purchasedTechIds);
       loadoutStore.setLayout(data.hubState.trainLayout);
       audioStore.setState({ muted: data.hubState.audioMuted, volume: data.hubState.audioVolume });
+      autoRunStore.setEnabled(data.hubState.autoRunEnabled);
+
+      // Idle income (Task 5.8) — apply accrued Salvage from time-away, then
+      // record now as the new lastHubExitMs baseline so the next session
+      // starts a fresh accrual window.
+      const accrued = accruedSalvage(data.hubState.lastHubExitMs, Date.now());
+      if (accrued > 0) {
+        salvageStore.setTotal(salvageStore.total + accrued);
+        this.overlay?.showIdleBanner(accrued);
+      }
+      this.saveSystem?.updateHubState({ lastHubExitMs: Date.now() });
+      void this.saveSystem?.flushSave();
     });
 
     const importToken = buildTokenFromUrl(window.location.href);
@@ -63,6 +77,10 @@ export class HubScene extends Phaser.Scene {
         importToken,
         onMuteToggle: (muted) => {
           this.saveSystem?.updateHubState({ audioMuted: muted });
+          void this.saveSystem?.flushSave();
+        },
+        onAutoRunToggle: (enabled) => {
+          this.saveSystem?.updateHubState({ autoRunEnabled: enabled });
           void this.saveSystem?.flushSave();
         },
         onApplyImport: (build) => {
@@ -86,11 +104,13 @@ export class HubScene extends Phaser.Scene {
     }
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      // Record exit time so next-enter idle accrual starts now.
+      this.saveSystem?.updateHubState({ lastHubExitMs: Date.now() });
+      void this.saveSystem?.flushSave();
       this.overlay?.destroy();
       this.overlay = undefined;
       this.tutorial?.destroy();
       this.tutorial = undefined;
-      void this.saveSystem?.flushSave();
       this.saveSystem = undefined;
       this.techTree = undefined;
     });

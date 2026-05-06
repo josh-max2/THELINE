@@ -7,6 +7,8 @@ import { TechTreePanel } from './techTreePanel';
 import { salvageStore } from '../lib/salvageStore';
 import { decodeBuild, type SharedBuild } from '../lib/buildShare';
 import { audioStore } from '../lib/audioStore';
+import { unlocksStore } from '../lib/unlocksStore';
+import { autoRunStore } from '../lib/autoRunStore';
 
 const PLACEHOLDER_NOTE = 'Phase 5 polish';
 
@@ -21,6 +23,8 @@ export interface HubOverlayDeps {
   onApplyImport?: (build: SharedBuild) => void;
   /** Called when the Mute toggle is clicked — persists muted flag to save. */
   onMuteToggle?: (muted: boolean) => void;
+  /** Called when the Auto-run toggle is clicked — persists flag to save. */
+  onAutoRunToggle?: (enabled: boolean) => void;
 }
 
 export class HubOverlay {
@@ -28,6 +32,10 @@ export class HubOverlay {
   private readonly salvageEl: HTMLSpanElement;
   private readonly unsubSalvage?: () => void;
   private readonly unsubAudio?: () => void;
+  private readonly unsubAutoRun?: () => void;
+  private readonly unsubUnlocks?: () => void;
+  private idleBannerEl?: HTMLDivElement;
+  private autoRunBtn?: HTMLButtonElement;
   private techPanel?: TechTreePanel;
 
   constructor(
@@ -70,6 +78,30 @@ export class HubOverlay {
     this.unsubSalvage = salvageStore.subscribe((total) => {
       this.salvageEl.textContent = `Salvage: ${total}`;
     });
+
+    // Auto-run toggle (Task 5.8) — only rendered if Eternal Engine is owned.
+    // Sits next to the mute button; subscribed to unlocksStore + autoRunStore
+    // so it appears/updates when tech changes mid-session.
+    this.autoRunBtn = document.createElement('button');
+    this.autoRunBtn.className = 'hub-autorun';
+    const renderAutoRunLabel = () => {
+      if (!this.autoRunBtn) return;
+      this.autoRunBtn.textContent = `Auto-run: ${autoRunStore.enabled ? 'ON' : 'OFF'}`;
+    };
+    const renderAutoRunVisibility = () => {
+      if (!this.autoRunBtn) return;
+      this.autoRunBtn.style.display = unlocksStore.has('auto-run') ? '' : 'none';
+    };
+    renderAutoRunLabel();
+    renderAutoRunVisibility();
+    this.autoRunBtn.addEventListener('click', () => {
+      const next = !autoRunStore.enabled;
+      autoRunStore.setEnabled(next);
+      deps.onAutoRunToggle?.(next);
+    });
+    this.unsubAutoRun = autoRunStore.subscribe(renderAutoRunLabel);
+    this.unsubUnlocks = unlocksStore.subscribe(renderAutoRunVisibility);
+    header.insertBefore(this.autoRunBtn, this.salvageEl);
 
     // Import-from-URL banner (Task 5.4) — shown when ?b=… is present.
     if (deps.importToken) {
@@ -117,9 +149,42 @@ export class HubOverlay {
   destroy(): void {
     this.unsubSalvage?.();
     this.unsubAudio?.();
+    this.unsubAutoRun?.();
+    this.unsubUnlocks?.();
     this.techPanel?.destroy();
     this.techPanel = undefined;
     this.root.remove();
+  }
+
+  /**
+   * Show a top-of-grid banner with the idle salvage gained while away.
+   * Called by HubScene after save load + accrual computation. Auto-fades
+   * after a few seconds so it doesn't permanently take grid space.
+   */
+  showIdleBanner(amount: number): void {
+    if (amount <= 0) return;
+    if (this.idleBannerEl) {
+      this.idleBannerEl.remove();
+    }
+    const banner = document.createElement('div');
+    banner.className = 'hub-idle-banner';
+    banner.textContent = `+${amount} idle Salvage gained while away.`;
+    // Insert above the grid (after header). Using prepend ensures it lands
+    // at the top even if the import-build banner was already inserted.
+    const grid = this.root.querySelector('.hub-grid');
+    if (grid && grid.parentElement === this.root) {
+      this.root.insertBefore(banner, grid);
+    } else {
+      this.root.appendChild(banner);
+    }
+    this.idleBannerEl = banner;
+    setTimeout(() => {
+      banner.classList.add('hub-idle-banner-fade');
+    }, 4000);
+    setTimeout(() => {
+      banner.remove();
+      if (this.idleBannerEl === banner) this.idleBannerEl = undefined;
+    }, 5000);
   }
 
   private makeTechTreeCard(system: TechTreeSystem): HTMLDivElement {
