@@ -3,6 +3,19 @@
 > Findings from the reviewer agent (Opus). New entries added at the top.
 > Categories: BLOCKER | NEEDS-CHANGE | NIT | OK-AS-IS
 
+## 2026-05-05 — Task 4.2.1 reviewer pass (advisor)
+
+**Verdict:** Item composition wired end-to-end cleanly. Pattern continuity hits 6th instance (validators-first / pure-helpers / Phaser-shells). The setter-cycle between IAS and MAS is the only architectural creak — and it creaks loudly via runtime guards.
+
+**Cosmetic fixes (addressed in same commit):**
+1. **Inline `import('../lib/types')` in MAS.getModuleAt signature** — cleaner with imports at file top. Fixed.
+2. **Item-stack position math was magic constants in IAS** — extracted to pure `src/lib/itemStackLayout.ts` (`computeStackedItemPosition` + 4 unit tests) so Phase 5 can swap stack direction (radial / beside per DESIGN §14 open question) without touching IAS.
+
+**NIT (tracked, not fixed):**
+- **`composeStats` allocates per frame.** 8 turrets × 60fps = 480 `EffectiveStats` records/sec. At Phase 5 with 30 turrets ≈ 1,800/sec. Probably fine via young-gen GC, but Phase 5 should profile before bullet-hell density lands. Memoize when item set unchanged is the natural fix.
+- **`BehaviorContext.items: ItemAttachmentSystem`** is a concrete-class dependency. An `ItemReadView` interface (just `itemsAt(qsi)`) would tighten the contract; handlers don't need attach/detach. Pre-Phase-5 cleanup.
+- **Empirical item impact unverified end-to-end.** salvage=19 at 30s with vs. without items is bit-identical because of spawn-cap + 8-turret oversaturation. Composition math is verified at unit-test level; runtime wiring is type-checked; visual stacking confirmed. A sparser test scenario (single weak turret) would close the loop. Phase 4.X balance pass.
+
 ## 2026-05-05 — Task 4.2 reviewer pass (advisor)
 
 **Verdict:** 10-turret roster + 3 new behavior handlers ship clean. Pattern continuity (validators + pure helpers + Phaser shells, fifth time) is solid. Two real fixes applied in same task; three NITs deferred.

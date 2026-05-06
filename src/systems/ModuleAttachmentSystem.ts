@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import modulesDataRaw from '../data/modules.json';
-import type { ModuleData, SlotDef } from '../lib/types';
+import type { ModuleData, QualifiedSlotId, SlotDef } from '../lib/types';
 import { qualifySlot } from '../lib/types';
 import type { PlacedCar } from './TrainSystem';
 import { drawRecipe } from '../lib/drawRecipe';
@@ -46,7 +46,7 @@ export class ModuleAttachmentSystem {
   }
 
   /** Read the turret data at a qualified slot. Used by IAS during attach validation. */
-  getModuleAt(qualifiedSlotId: import('../lib/types').QualifiedSlotId): import('../lib/types').ModuleData | undefined {
+  getModuleAt(qualifiedSlotId: QualifiedSlotId): ModuleData | undefined {
     return this.tracker.getAttached(qualifiedSlotId);
   }
 

@@ -5,15 +5,12 @@ import { qualifySlot } from '../lib/types';
 import { ItemStackTracker } from '../lib/itemStackTracker';
 import { canStackItem } from '../lib/itemValidators';
 import { drawRecipe } from '../lib/drawRecipe';
+import { computeStackedItemPosition } from '../lib/itemStackLayout';
 import type { TrainSystem } from './TrainSystem';
 import type { ModuleAttachmentSystem } from './ModuleAttachmentSystem';
 
 const ITEMS = itemsDataRaw as unknown as Record<string, ItemData>;
 
-/** Vertical offset above the turret slot for the 1st stacked item. */
-const STACK_BASE_Y_OFFSET = 14;
-/** Spacing between subsequent stacked items. */
-const STACK_STEP = 12;
 /** Render depth for items — above turrets but below projectiles/explosions. */
 const ITEM_DEPTH = 60;
 
@@ -76,8 +73,8 @@ export class ItemAttachmentSystem {
     if (!slot) throw new Error(`Car ${car.data.name} has no slot ${slotId}`);
 
     const stackIndex = currentItems.length; // 0 = first, 1 = second, ...
-    const x = car.x + slot.x;
-    const y = car.y + slot.y - STACK_BASE_Y_OFFSET - STACK_STEP * stackIndex;
+    const slotWorldPos = { x: car.x + slot.x, y: car.y + slot.y };
+    const { x, y } = computeStackedItemPosition(slotWorldPos, stackIndex);
 
     const g = this.scene.add.graphics({ x, y });
     drawRecipe(g, item.render);
