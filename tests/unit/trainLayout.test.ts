@@ -50,4 +50,25 @@ describe('computeCarPositions', () => {
     expect(positions[0]).toEqual({ x: 0, y: 0 });
     expect(positions[1]).toEqual({ x: 100, y: 0 }); // 0 + 50 + 0 + 50
   });
+
+  test('default v1 train [Engine, Weapon, Armor, Crew, Cargo] fits in 1280px viewport', () => {
+    // All v1 cars are 96 wide; gap is CAR_GAP=8.
+    // 5 cars × 96 + 4 gaps × 8 = 480 + 32 = 512 train width.
+    // Anchor at TRAIN_ANCHOR_X=200 → leftmost edge = 200-48 = 152;
+    // rightmost edge = 200-48 + 512 = 664. Well within 1280.
+    const positions = computeCarPositions([
+      { width: 96 },
+      { width: 96 },
+      { width: 96 },
+      { width: 96 },
+      { width: 96 },
+    ]);
+    expect(positions).toHaveLength(5);
+    expect(positions[0].x).toBe(TRAIN_ANCHOR_X); // engine
+    expect(positions[4].x).toBeLessThan(1280 - 48); // cargo right edge under viewport
+    // Successive cars 104 px apart center-to-center (96/2 + 8 + 96/2 = 104).
+    for (let i = 1; i < positions.length; i++) {
+      expect(positions[i].x - positions[i - 1].x).toBe(104);
+    }
+  });
 });

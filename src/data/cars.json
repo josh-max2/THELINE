@@ -30,13 +30,24 @@
     "hp": 250,
     "width": 96,
     "height": 56,
-    "slots": [],
+    "slots": [
+      { "id": "weapon-top-1", "type": "top", "x": -32, "y": -36 },
+      { "id": "weapon-top-2", "type": "top", "x": 0, "y": -36 },
+      { "id": "weapon-top-3", "type": "top", "x": 32, "y": -36 }
+    ],
     "render": {
       "fill": "#3a3a4a",
       "stroke": "#0c0c14",
       "strokeWidth": 2,
       "shapes": [
-        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+        { "kind": "rect", "x": -48, "y": -24, "w": 96, "h": 48 },
+        { "kind": "rect", "x": -36, "y": -32, "w": 8, "h": 8, "fill": "#5a5a6a" },
+        { "kind": "rect", "x": -4, "y": -32, "w": 8, "h": 8, "fill": "#5a5a6a" },
+        { "kind": "rect", "x": 28, "y": -32, "w": 8, "h": 8, "fill": "#5a5a6a" },
+        { "kind": "rect", "x": -44, "y": -8, "w": 88, "h": 2, "fill": "#5a5a6a" },
+        { "kind": "circle", "x": -30, "y": 24, "r": 7, "fill": "#1a1a24" },
+        { "kind": "circle", "x": 0, "y": 24, "r": 7, "fill": "#1a1a24" },
+        { "kind": "circle", "x": 30, "y": 24, "r": 7, "fill": "#1a1a24" }
       ]
     }
   },
@@ -46,13 +57,25 @@
     "hp": 600,
     "width": 96,
     "height": 56,
-    "slots": [],
+    "slots": [
+      { "id": "armor-top-1", "type": "top", "x": -24, "y": -36 },
+      { "id": "armor-top-2", "type": "top", "x": 24, "y": -36 }
+    ],
     "render": {
       "fill": "#3a3024",
       "stroke": "#1a140c",
-      "strokeWidth": 2,
+      "strokeWidth": 3,
       "shapes": [
-        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+        { "kind": "rect", "x": -48, "y": -24, "w": 96, "h": 48 },
+        { "kind": "rect", "x": -44, "y": -10, "w": 88, "h": 4, "fill": "#5a4a30" },
+        { "kind": "rect", "x": -44, "y": 4, "w": 88, "h": 4, "fill": "#5a4a30" },
+        { "kind": "circle", "x": -42, "y": -18, "r": 2, "fill": "#1a140c" },
+        { "kind": "circle", "x": 42, "y": -18, "r": 2, "fill": "#1a140c" },
+        { "kind": "circle", "x": -42, "y": 18, "r": 2, "fill": "#1a140c" },
+        { "kind": "circle", "x": 42, "y": 18, "r": 2, "fill": "#1a140c" },
+        { "kind": "circle", "x": -30, "y": 24, "r": 7, "fill": "#1a140c" },
+        { "kind": "circle", "x": 0, "y": 24, "r": 7, "fill": "#1a140c" },
+        { "kind": "circle", "x": 30, "y": 24, "r": 7, "fill": "#1a140c" }
       ]
     }
   },
@@ -62,13 +85,24 @@
     "hp": 300,
     "width": 96,
     "height": 56,
-    "slots": [],
+    "slots": [
+      { "id": "crew-top-1", "type": "top", "x": 0, "y": -36 }
+    ],
     "render": {
       "fill": "#2c4a3a",
       "stroke": "#0c1c14",
       "strokeWidth": 2,
       "shapes": [
-        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+        { "kind": "rect", "x": -48, "y": -24, "w": 96, "h": 48 },
+        { "kind": "circle", "x": -28, "y": 0, "r": 9, "fill": "#5a8a72" },
+        { "kind": "circle", "x": 0, "y": 0, "r": 9, "fill": "#5a8a72" },
+        { "kind": "circle", "x": 28, "y": 0, "r": 9, "fill": "#5a8a72" },
+        { "kind": "circle", "x": -28, "y": 0, "r": 5, "fill": "#0c1c14" },
+        { "kind": "circle", "x": 0, "y": 0, "r": 5, "fill": "#0c1c14" },
+        { "kind": "circle", "x": 28, "y": 0, "r": 5, "fill": "#0c1c14" },
+        { "kind": "circle", "x": -30, "y": 24, "r": 7, "fill": "#0c1c14" },
+        { "kind": "circle", "x": 0, "y": 24, "r": 7, "fill": "#0c1c14" },
+        { "kind": "circle", "x": 30, "y": 24, "r": 7, "fill": "#0c1c14" }
       ]
     }
   },
@@ -84,7 +118,15 @@
       "stroke": "#1c140c",
       "strokeWidth": 2,
       "shapes": [
-        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+        { "kind": "rect", "x": -48, "y": -8, "w": 96, "h": 32 },
+        { "kind": "rect", "x": -48, "y": -8, "w": 6, "h": 32, "fill": "#6a5440" },
+        { "kind": "rect", "x": 42, "y": -8, "w": 6, "h": 32, "fill": "#6a5440" },
+        { "kind": "rect", "x": -40, "y": -18, "w": 18, "h": 10, "fill": "#3a2a1c" },
+        { "kind": "rect", "x": -10, "y": -22, "w": 20, "h": 14, "fill": "#3a2a1c" },
+        { "kind": "rect", "x": 22, "y": -16, "w": 18, "h": 8, "fill": "#3a2a1c" },
+        { "kind": "circle", "x": -30, "y": 24, "r": 7, "fill": "#1c140c" },
+        { "kind": "circle", "x": 0, "y": 24, "r": 7, "fill": "#1c140c" },
+        { "kind": "circle", "x": 30, "y": 24, "r": 7, "fill": "#1c140c" }
       ]
     }
   }

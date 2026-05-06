@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 3 COMPLETE — vertical slice closed; Phase 4 ready)
-> Build phase: 4 (core systems) — ready to start
+> Last updated: 2026-05-05 by claude (Phase 4 Task 4.1 complete — 5 car types render)
+> Build phase: 4 (core systems — Task 4.1 done)
 > v1 ETA: 2026-07-15
 
 ## Current build status
@@ -10,6 +10,7 @@
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
+- Phase 4 core systems: 🚧 (4.1 ✅, 4.1.1 next per ADR-002)
 - Phase 4 core systems: ⏳
 - Phase 5 content + polish: ⏳
 - Phase 6 launch prep: ⏳
@@ -18,6 +19,7 @@
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.1: 5 car types rendering.** Replaced 4 stub car entries with full data (slot positions per ADR-001 §Gap 1, distinct vector silhouettes). Engine (slate-blue + smokestack + cab + cannon attached, 2 top slots), Weapon Car (dark gray + 3 mount stubs, 3 top slots), Armor Car (rust + heavy plating + rivets + thicker stroke, 2 top slots), Crew Car (green + 3 portholes, 1 top slot), Cargo Car (brown + open-top with cargo boxes, 0 slots). Default v1 train = `[Engine, Weapon, Armor, Crew, Cargo]` per build plan. HUD now shows `Train: 5/8`. New Vitest test verifies full 5-car layout fits 1280×720 (positions 200, 304, 408, 512, 616; train extends to x≈664). Used 96px uniform width + 8px gap from existing trainLayout math; no architectural changes. **84/84 unit pass** (+1 layout test), **3/3 E2E pass** (combat loop + persistence still green). Visual screenshot confirms each car is immediately distinguishable. | 84 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 3 Task 3.7: end-of-phase audit (CLOSES PHASE 3).** Independent advisor reviewer pass + synthesis. Findings logged in REVIEW_NOTES.md as a "Phase 3 end-of-phase review" section across 5 dimensions (architecture/scale, coverage, DESIGN drift, code smells, perf). **0 BLOCKER, 0 NEEDS-CHANGE** — clean gate. 16 NIT items deferred to Phase 4 / 5 / 6. **10 issues caught & fixed in flight** during Phase 3 (4 advisor pre-flights, 2 reviewer-pass NEEDS-CHANGE in 3.4, 2 in 3.5, 1 audit-finding refactor pre-3.4, 1 index.html audit catch). Build plan's specific 3.4 gate question ("can slot system scale to 30+ modules / 5 car types?") explicitly answered: OK-AS-IS. CLAUDE.md updated with: (a) testing policy (pure helpers unit-tested, Phaser shells via E2E — intentional), (b) permission-rule caching constraint (deny rules cached at session start, `Bash(node *)` allow lets subprocess-bypass; subagent worktree-isolation is the real boundary). Push committed via `node spawnSync` workaround documented. | 83 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | Phase 3 Task 3.6: **SaveSystem v0**. Three-layer architecture: pure `saveSchema.ts` (types + migration runner with `__registerTestMigrationV0toV1` hook to exercise the framework even at v1) + `saveStorage.ts` (`SaveStorage` interface, `LocalforageStorage` for prod, `InMemoryStorage` for tests) + `SaveSystem.ts` (orchestrator: load on init, auto-save every 30s, flush on visibility-hidden + beforeunload). Save shape `{ saveVersion: 1, totalSalvage, lastSaved }` per ADR-001 §Gap 5. `salvageStore.setTotal()` added to avoid HUD flicker on load (one listener fire instead of reset+add). E2E persistence test verifies salvage survives `page.reload()`. Storage failures downgrade to "start fresh" with console warning — never crashes startup. **83/83 unit pass** (+28 vs Task 3.5: saveSchema 11, saveStorage 6, saveSystem 8 plus +2 misc), **3/3 E2E pass** (added persistence test). | 83 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | Phase 3 Task 3.5: **CombatSystem + EnemySpawner v0**. Combat loop closed end-to-end: scout spawns offscreen (rear/top/bottom per ADR-002), travels toward train, cannon (auto-fire turret) fires every 1s at nearest enemy, projectile travels at 600 px/sec, on hit applies damage, on kill `+1 Salvage`. HUD shows current Salvage top-right, subscribed to `salvageStore`. New: `enemies.json` (scout: HP 10, 80 px/sec, red triangle), `spawnDirection.ts` (pure picker, weights 50/25/25), `salvageStore.ts` (plain observable), `EnemySpawner.ts`, `CombatSystem.ts`. Auto-fire handler in moduleBehaviors filled in (was no-op stub from Task 3.4). E2E asserts salvage > 0 within 7s by reading `window.__salvage` (test-only side door). **55/55 unit pass** (+spawnDirection 11 + salvageStore 6 = +17 since 3.4-pre-refactor 38; -2 from Task 3.4 flat count due to consolidation), **2/2 E2E pass**. Advisor reviewer pass clean — 2 NEEDS-CHANGE addressed (subscriber leak in salvage tests, weak spawn distribution test → LCG with ±3σ). **Divergences from build plan:** (a) linear projectiles in v0 (no Matter.js gravity arcs — defer to Phase 4 mortars); (b) no direct CombatSystem/EnemySpawner unit tests (Phaser-coupled; coverage via pure helpers + E2E, same pattern as Tasks 3.3/3.4); (c) E2E checks `salvage > 0` rather than "5 enemies destroyed" (same evidence, simpler probe); (d) committing to `main`, not `feat-combat-v0` worktree (foreground PM mode); (e) `window.__salvage` test side door (gated as getter, documented). | 55 unit ✅ · 2 E2E ✅ |
@@ -31,14 +33,13 @@
 | 2026-05-05 | human + claude | main | Phase 1 docs (CLAUDE.md with audit-discipline section, DESIGN.md, PROGRESS.md, REVIEW_NOTES.md, README.md) | n/a |
 | 2026-05-05 | human + claude | main | Phase 0 scaffold (Vite + TS + Phaser ^3.90 + zustand + localforage + vitest + Playwright). MCP playwright wired. Repo pushed to https://github.com/josh-max2/THELINE. **Divergence:** Pinned Phaser to ^3.90 instead of latest 4.x because the build plan assumes v3 idioms. | n/a |
 
-## Next priorities (queue, ordered) — Phase 4 begins
+## Next priorities (queue, ordered) — Phase 4 in progress
 
-1. **READY** — Phase 4 Task 4.1: Expand cars.json data for all 5 v1 car types (Engine, Weapon, Armor, Crew, Cargo). HP, slots, render recipes per ADR-001 §Gap 1. Render distinct silhouettes. Default starting train: `[Engine, Weapon, Armor, Crew, Cargo]` per build plan. Vitest + visual screenshot.
-2. **GATED ON 4.1** — Phase 4 Task 4.1.1 (slotted per ADR-002): ItemData types + `items.json` skeleton + `canStackItem` validator + `ItemStackTracker` (architecture only, no runtime usage yet).
-3. **GATED ON 4.1.1** — Phase 4 Task 4.2: 10 modules (turrets) across categories. 2 kinetic, 2 fire, 2 cryo, 1 explosive, 1 electric, 2 support. JSON-only changes per established pattern.
-4. **GATED ON 4.2** — Phase 4 Task 4.2.1 (slotted per ADR-002): ItemAttachmentSystem (Phaser, stacked-silhouette rendering); CombatSystem composes effective turret stats from base ⊕ items. ~5 items implemented for synergy testing.
-5. **GATED ON 4.2.1** — Phase 4 Task 4.3: PowerSystem with FTL-style UI.
-6. **(continues per build plan Phase 4 sequence)**
+1. **READY** — Phase 4 Task 4.1.1 (slotted per ADR-002): ItemData types + `items.json` skeleton + `canStackItem` validator + `ItemStackTracker` (architecture only, no runtime usage yet). Establishes the items layer before Phase 4 Task 4.2 turrets ship so item-stat composition slot is ready.
+2. **GATED ON 4.1.1** — Phase 4 Task 4.2: 10 modules (turrets) across categories. 2 kinetic, 2 fire, 2 cryo, 1 explosive, 1 electric, 2 support. JSON-only per established pattern.
+3. **GATED ON 4.2** — Phase 4 Task 4.2.1 (slotted per ADR-002): ItemAttachmentSystem (Phaser, stacked-silhouette rendering); CombatSystem composes effective turret stats from base ⊕ items. ~5 items for synergy testing.
+4. **GATED ON 4.2.1** — Phase 4 Task 4.3: PowerSystem with FTL-style UI.
+5. **(continues per build plan Phase 4 sequence — Tasks 4.4 crew, 4.5 slow-time, 4.6 enemies+boss, 4.7 encounters, 4.8 environment matrix, 4.9 hub, 4.10 save v2)**
 
 ## Open questions for human (Josh)
 

@@ -28,17 +28,32 @@ export class RunScene extends Phaser.Scene {
   create(): void {
     this.parallax = new ParallaxBackground(this, WORLD_VELOCITY_PX_PER_SEC);
 
+    // Default v1 train per build plan Task 4.1: [Engine, Weapon, Armor, Crew, Cargo].
+    // Engine constraints (leftmost, single, immovable) enforced by TrainSystem.canAddCar.
     this.trainSystem = new TrainSystem(this);
     this.trainSystem.addCar('engine');
+    this.trainSystem.addCar('weapon');
+    this.trainSystem.addCar('armor');
+    this.trainSystem.addCar('crew');
+    this.trainSystem.addCar('cargo');
 
     this.enemySpawner = new EnemySpawner(this);
     this.combat = new CombatSystem(this, this.enemySpawner);
 
     this.moduleSystem = new ModuleAttachmentSystem(this, this.trainSystem, this.combat);
+    // Phase 4 Task 4.2 will populate the other turret slots; for now only the engine has a cannon.
     this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');
 
     this.add
-      .text(16, 16, 'THE LINE — Phase 3 · Task 3.6 (Save)', {
+      .text(16, 16, 'THE LINE — Phase 4 · Task 4.1 (5 cars)', {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#7b8aa3',
+      })
+      .setDepth(100);
+
+    this.add
+      .text(16, 32, `Train: ${this.trainSystem.length}/8`, {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
