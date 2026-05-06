@@ -9,12 +9,14 @@
 import type Phaser from 'phaser';
 import type { BehaviorKind, ModuleData, QualifiedSlotId } from './types';
 import type { TrainSystem } from '../systems/TrainSystem';
+import type { CombatSystem } from '../systems/CombatSystem';
 
 /** Per-frame context passed to every active behavior. */
 export interface BehaviorContext {
   scene: Phaser.Scene;
   train: TrainSystem;
-  // Phase 3 Task 3.5 will add: combat: CombatSystem; enemies: EnemySpawner.
+  combat: CombatSystem;
+  // Phase 4 will add EnemySpawner directly when item-modified targeting needs it.
 }
 
 /** A live attachment as the registry sees it. */
@@ -53,7 +55,11 @@ class ModuleBehaviorRegistry {
 /** Singleton registry. Handlers register themselves at module-load. */
 export const moduleBehaviors = new ModuleBehaviorRegistry();
 
-// ─── Auto-fire (Task 3.4 stub; Task 3.5 will wire CombatSystem into ctx) ───
+// ─── Auto-fire (Task 3.5: wired into CombatSystem) ────────────────────────
+//
+// Per ADR-002: damage and fireRate are read from the turret's behavior data
+// (base stats only in Phase 3). Phase 4 Task 4.2.1 will swap this read for a
+// composed-stats lookup that folds attached items in.
 
 interface AutoFireState {
   cooldownSeconds: number;
@@ -63,12 +69,30 @@ const autoFireHandler: BehaviorHandler = {
   init(handle) {
     handle.state['auto-fire'] = { cooldownSeconds: 0 } satisfies AutoFireState;
   },
-  update(deltaSeconds, handle, _ctx) {
+  update(deltaSeconds, handle, ctx) {
     const s = handle.state['auto-fire'] as AutoFireState | undefined;
     if (!s) return;
     s.cooldownSeconds = Math.max(0, s.cooldownSeconds - deltaSeconds);
-    // Task 3.5 will: when cooldown hits 0, fire via ctx.combat at nearest enemy
-    // and reset cooldown to 1 / behavior.fireRate.
+
+    if (s.cooldownSeconds > 0) return;
+
+    // Resolve the turret's world position. The qualified slot id encodes
+    // the carIndex; the slot id resolves on the car's slot list.
+    const [carIndexStr, slotId] = handle.qualifiedSlotId.split(':');
+    const carIndex = Number(carIndexStr);
+    const car = ctx.train.getCar(carIndex);
+    if (!car) return;
+    const slot = car.data.slots.find((sl) => sl.id === slotId);
+    if (!slot) return;
+
+    const fireRate = (handle.data.behavior.fireRate as number | undefined) ?? 1.0;
+    const damage = (handle.data.behavior.damage as number | undefined) ?? 1;
+
+    const fired = ctx.combat.fireFrom(car.x + slot.x, car.y + slot.y, damage);
+    if (fired) {
+      s.cooldownSeconds = 1 / fireRate;
+    }
+    // If no target in range, leave cooldown at 0 so we'll fire as soon as one appears.
   },
 };
 

@@ -1,0 +1,18 @@
+{
+  "scout": {
+    "id": "scout",
+    "name": "Scout",
+    "hp": 10,
+    "speed": 80,
+    "damage": 5,
+    "radius": 9,
+    "render": {
+      "fill": "#c44848",
+      "stroke": "#5a1818",
+      "strokeWidth": 1,
+      "shapes": [
+        { "kind": "tri", "points": [[0, -9], [-8, 7], [8, 7]] }
+      ]
+    }
+  }
+}

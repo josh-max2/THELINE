@@ -8,8 +8,9 @@ import { canAttach } from '../lib/moduleValidators';
 import { AttachmentTracker } from '../lib/attachmentTracker';
 import { moduleBehaviors, type AttachedModuleHandle, type BehaviorContext } from '../lib/moduleBehaviors';
 import type { TrainSystem } from './TrainSystem';
+import type { CombatSystem } from './CombatSystem';
 
-const MODULES = modulesDataRaw as Record<string, ModuleData>;
+const MODULES = modulesDataRaw as unknown as Record<string, ModuleData>;
 
 interface PhaserAttachment {
   handle: AttachedModuleHandle;
@@ -27,12 +28,14 @@ interface PhaserAttachment {
 export class ModuleAttachmentSystem {
   private readonly scene: Phaser.Scene;
   private readonly train: TrainSystem;
+  private readonly combat: CombatSystem;
   private readonly tracker = new AttachmentTracker();
   private readonly phaserAttachments = new Map<string, PhaserAttachment>();
 
-  constructor(scene: Phaser.Scene, train: TrainSystem) {
+  constructor(scene: Phaser.Scene, train: TrainSystem, combat: CombatSystem) {
     this.scene = scene;
     this.train = train;
+    this.combat = combat;
   }
 
   /**
@@ -118,6 +121,6 @@ export class ModuleAttachmentSystem {
   }
 
   private context(): BehaviorContext {
-    return { scene: this.scene, train: this.train };
+    return { scene: this.scene, train: this.train, combat: this.combat };
   }
 }

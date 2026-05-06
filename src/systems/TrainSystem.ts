@@ -5,7 +5,8 @@ import { drawRecipe } from '../lib/drawRecipe';
 import { computeCarPositions, TRAIN_ANCHOR_X, TRAIN_CENTER_Y, CAR_GAP } from '../lib/trainLayout';
 import { canAddCar } from '../lib/trainValidators';
 
-const CARS = carsDataRaw as Record<CarType, CarData>;
+// JSON imports widen tuples; cast through unknown so future tri-shapes work.
+const CARS = carsDataRaw as unknown as Record<CarType, CarData>;
 
 export interface PlacedCar {
   type: CarType;

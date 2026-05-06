@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 3.4 complete, beginning 3.5)
-> Build phase: 3 (vertical slice — Tasks 3.1–3.4 done; most-important task cleared)
+> Last updated: 2026-05-05 by claude (Phase 3.5 complete, beginning 3.6)
+> Build phase: 3 (vertical slice — combat loop closed end-to-end)
 > v1 ETA: 2026-07-15
 
 ## Current build status
@@ -9,7 +9,7 @@
 - Phase 0 environment bootstrap: ✅
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
-- Phase 3 vertical slice: 🚧 (3.1 ✅, 3.2 ✅, 3.3 ✅, 3.4 ✅, 3.5 next)
+- Phase 3 vertical slice: 🚧 (3.1 ✅, 3.2 ✅, 3.3 ✅, 3.4 ✅, 3.5 ✅, 3.6 next)
 - Phase 4 core systems: ⏳
 - Phase 5 content + polish: ⏳
 - Phase 6 launch prep: ⏳
@@ -18,6 +18,7 @@
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-05 | claude (PM) | main | Phase 3 Task 3.5: **CombatSystem + EnemySpawner v0**. Combat loop closed end-to-end: scout spawns offscreen (rear/top/bottom per ADR-002), travels toward train, cannon (auto-fire turret) fires every 1s at nearest enemy, projectile travels at 600 px/sec, on hit applies damage, on kill `+1 Salvage`. HUD shows current Salvage top-right, subscribed to `salvageStore`. New: `enemies.json` (scout: HP 10, 80 px/sec, red triangle), `spawnDirection.ts` (pure picker, weights 50/25/25), `salvageStore.ts` (plain observable), `EnemySpawner.ts`, `CombatSystem.ts`. Auto-fire handler in moduleBehaviors filled in (was no-op stub from Task 3.4). E2E asserts salvage > 0 within 7s by reading `window.__salvage` (test-only side door). **55/55 unit pass** (+spawnDirection 11 + salvageStore 6 = +17 since 3.4-pre-refactor 38; -2 from Task 3.4 flat count due to consolidation), **2/2 E2E pass**. Advisor reviewer pass clean — 2 NEEDS-CHANGE addressed (subscriber leak in salvage tests, weak spawn distribution test → LCG with ±3σ). **Divergences from build plan:** (a) linear projectiles in v0 (no Matter.js gravity arcs — defer to Phase 4 mortars); (b) no direct CombatSystem/EnemySpawner unit tests (Phaser-coupled; coverage via pure helpers + E2E, same pattern as Tasks 3.3/3.4); (c) E2E checks `salvage > 0` rather than "5 enemies destroyed" (same evidence, simpler probe); (d) committing to `main`, not `feat-combat-v0` worktree (foreground PM mode); (e) `window.__salvage` test side door (gated as getter, documented). | 55 unit ✅ · 2 E2E ✅ |
 | 2026-05-05 | claude (PM) + human | main | **Design pivot (pre-Task-3.5):** (1) Enemies spawn from every direction EXCEPT forward (+x) — chase fantasy. ADR-001 §Gap 2 amended (had it backwards: said spawns at +x). (2) Module model split into **Turrets + Items** (BoI-style stacking). Turrets keep current ModuleData shape; Items are new, stack on turrets, modify traits via `effects: [{stat, op, value}]`. New ADR-002 captures full architecture; items implementation deferred to Phase 4 (Task 4.1.1+) to keep Phase 3 vertical slice scoped. DESIGN §5 rewritten, §6/§10/§14/§15 updated. | n/a |
 | 2026-05-05 | claude (PM) | main | Phase 3 Task 3.4: **ModuleAttachmentSystem v0** (build plan's flagged most-important Phase 3 task). Implements all three remaining ADR-001 architectural commitments: typed slots (§Gap 1), JSON shape recipe re-used for module rendering (§Gap 3), tagged `behavior.kind` registry with `BehaviorContext` shape locked-in (§Gap 6). New: `modules.json` (basic-cannon), `moduleValidators.ts`, `attachmentTracker.ts` (qualified-slot keys preempting Phase 4 multi-WeaponCar collision), `moduleBehaviors.ts` (registry + auto-fire stub), `ModuleAttachmentSystem.ts` (Phaser shell, world-positioned graphics). Engine slot positions repositioned to clear cab/smokestack. **37/37 unit pass** (+13 vs Task 3.3: 5 validators + 8 tracker), **1/1 E2E pass** with cannon-pixel assertion derived from cars.json data. Advisor consulted at plan stage (caught 4 issues pre-code: slot key collision, BehaviorContext shape, missing tracker abstraction, hardcoded E2E pixel — all addressed before implementation). Reviewer pass logged at REVIEW_NOTES.md with 2 NEEDS-CHANGE addressed in same commit + 4 NITs tracked. **Pre-3.4 refactor:** extracted `canAddCar` validator from TrainSystem (audit Finding #2) — established pattern reused in 3.4. **Divergences:** (a) types live in `src/lib/types.ts` not `src/types/module.ts` (organizational); (b) `MAS.attach/detach/render` covered via composition tests (`tracker` + `validators`) rather than direct MAS unit tests (Phaser-coupling makes direct test require canvas mocks); (c) added `@types/node` dep + `node` to tsconfig types (E2E test reads cars.json via fs at test load). | 37 unit ✅ · 1 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | Pre-3.4 refactor (audit Finding #2): extracted `canAddCar` to pure `src/lib/trainValidators.ts` (10 unit tests covering first-must-be-engine, single-engine cap, length cap, custom maxLength). TrainSystem.addCar now delegates validation. Establishes the validator-first pattern for Task 3.4's slot validators. **24 unit pass** (was 14). | 24 unit ✅ · 1 E2E ✅ |
@@ -30,11 +31,10 @@
 
 ## Next priorities (queue, ordered)
 
-1. **READY** — Phase 3 Task 3.5: CombatSystem + EnemySpawner v0. Turret (currently `basic-cannon`) auto-fires at nearest Scout every 1s — fills the auto-fire stub in moduleBehaviors.ts. Scout = small inbound triangle, 80 px/sec, 10 HP. **EnemySpawner per ADR-002:** spawns from rear (-x, ~50%), top (-y, ~25%), bottom (+y, ~25%); never +x. +1 Salvage per kill, top-right HUD. Vitest for spawn-direction picker (pure), Salvage math, projectile-collision math. E2E asserts Salvage > 0 after a few scouts.
-2. **GATED ON 3.5** — Phase 3 Task 3.6: SaveSystem v0 (saveVersion: 1, totalSalvage persists via localforage, migration runner stub).
-3. **GATED ON 3.6** — Phase 3 Task 3.7: Reviewer/Opus end-of-phase audit.
-4. **NEW (Phase 4, slotted in per ADR-002)** — Task 4.1.1: ItemData types + `items.json` skeleton + `canStackItem` validator + `ItemStackTracker` (no runtime usage yet).
-5. **NEW (Phase 4, slotted in per ADR-002)** — Task 4.2.1: ItemAttachmentSystem (Phaser, stacked-silhouette rendering); CombatSystem composes effective turret stats from base ⊕ items.
+1. **READY** — Phase 3 Task 3.6: SaveSystem v0. Per build plan + ADR-001 §Gap 5: `{ saveVersion: 1, totalSalvage, lastSaved }` persisted via localforage. Auto-save on `salvageStore` updates + page-unload. Load on game start; new-save fallback if none. Migration runner skeleton (`migrate(data)` — v0→v1 identity since no prior schema, but the framework must exist per CLAUDE.md "save versioning sacred"). Unit tests for save/load round-trip + migration with mocked v0 saves.
+2. **GATED ON 3.6** — Phase 3 Task 3.7: end-of-phase audit. Architecture quality review (will it scale to Phase 4 modules / Phase 5 30 modules?), test coverage gaps, DESIGN.md drift, performance concerns for bullet-hell density.
+3. **NEW (Phase 4, slotted in per ADR-002)** — Task 4.1.1: ItemData types + `items.json` skeleton + `canStackItem` validator + `ItemStackTracker` (no runtime usage yet).
+4. **NEW (Phase 4, slotted in per ADR-002)** — Task 4.2.1: ItemAttachmentSystem (Phaser, stacked-silhouette rendering); CombatSystem composes effective turret stats from base ⊕ items.
 
 ## Open questions for human (Josh)
 
@@ -49,8 +49,10 @@
 
 ## Performance metrics
 
-- Total source: ~250 LoC (`src/**/*.ts`) after Task 3.3
-- Test coverage: 14 unit (gameConfig 4, trainLayout 6, color 4) + 1 E2E (canvas pixel sample)
+- Total source: ~700 LoC (`src/**/*.ts`) after Task 3.5
+- Test coverage: 55 unit + 2 E2E
+  - gameConfig 4, trainLayout 6, color 4, trainValidators 10, moduleValidators 5, attachmentTracker 8, spawnDirection 11, salvageStore 6
+  - E2E: pixel sampling (engine + cannon), combat-loop salvage assertion
 - Bundle size: not measured yet (no `pnpm build` run yet)
 - 60fps target: not measured yet (Phase 3 won't have enough density to test)
 - Load time: not measured yet
@@ -63,6 +65,7 @@
 - `docs/screenshots/2026-05-05-task3.2-audit-recheck.png` — Audit re-verification before Task 3.3 (pixel-identical to baseline; no regressions).
 - `docs/screenshots/2026-05-05-task3.3-engine-parallax.png` — TrainSystem v0 first render: engine silhouette (slate-blue body, cab, smokestack, 3 wheels) at left, parallax horizon ticks scrolling.
 - `docs/screenshots/2026-05-05-task3.4-cannon-attached.png` — ModuleAttachmentSystem v0: basic-cannon (turret + horizontal barrel) attached at engine `top-1` slot, visible above the cab. Engine art repositioned (cab moved center-back, smokestack moved far-right) to clear slot positions.
+- `docs/screenshots/2026-05-05-task3.5-combat.png` — Task 3.5 combat loop active: engine + cannon at left, projectile mid-flight (yellow dot south-east of engine — scout was approaching from bottom), Salvage HUD reads "Salvage: 3" (3 scouts killed in 6s).
 
 ## Audit log
 

@@ -101,3 +101,18 @@ export type QualifiedSlotId = `${number}:${string}`;
 export function qualifySlot(carIndex: number, slotId: string): QualifiedSlotId {
   return `${carIndex}:${slotId}`;
 }
+
+// ─── Enemies ───────────────────────────────────────────────────────────────
+
+export interface EnemyData {
+  id: string;
+  name: string;
+  hp: number;
+  /** World units per second toward target. */
+  speed: number;
+  /** Damage dealt to train on contact (Phase 4 hooks it up). */
+  damage: number;
+  /** Approximate collision radius for projectile hit detection. */
+  radius: number;
+  render: RenderRecipe;
+}

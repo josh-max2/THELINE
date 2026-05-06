@@ -13,7 +13,7 @@ const slot1 = cars.engine.slots.find((s) => s.id === 'engine-top-1')!;
 const cannonWorldX = TRAIN_ANCHOR_X + slot1.x;
 const cannonWorldY = TRAIN_CENTER_Y + slot1.y;
 
-test.describe('Phase 3 / Tasks 3.3–3.4 — train + module renders', () => {
+test.describe('Phase 3 / Tasks 3.3–3.5 — train + module + combat', () => {
   test('canvas is present and produces non-empty pixel data after 2 seconds', async ({ page }) => {
     await page.goto('/');
 
@@ -59,5 +59,15 @@ test.describe('Phase 3 / Tasks 3.3–3.4 — train + module renders', () => {
     expect(samples.cannon.slice(0, 3)).not.toEqual(samples.background.slice(0, 3));
     // Cannon must be a distinct fill from the engine body (they use different slate hues).
     expect(samples.cannon.slice(0, 3)).not.toEqual(samples.engineBody.slice(0, 3));
+  });
+
+  test('combat loop produces salvage within 7 seconds (Task 3.5)', async ({ page }) => {
+    await page.goto('/');
+    // Wait long enough for: first scout spawn (~1.5s) + travel-to-train + cannon fire + projectile travel.
+    await page.waitForTimeout(7000);
+
+    const salvage = await page.evaluate(() => window.__salvage?.total);
+    expect(salvage, 'salvage should be tracked on window').toBeDefined();
+    expect(salvage, 'cannon should kill at least one scout in 7s').toBeGreaterThan(0);
   });
 });
