@@ -23,7 +23,6 @@
       "Write(scripts/**)"
     ],
     "deny": [
-      "Bash(git push *)",
       "Bash(rm -rf *)",
       "Bash(curl *)"
     ]
