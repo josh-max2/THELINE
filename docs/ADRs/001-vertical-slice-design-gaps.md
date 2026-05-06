@@ -70,13 +70,15 @@ The build plan (Phase 3 Task 3.4) explicitly flags **ModuleAttachmentSystem as t
 - **C. Hybrid.** Train-relative coords for game logic, parallax for visuals.
 
 **Recommendation: B with a left-anchored, single conceptual coordinate system.** The train is fixed in screen space — **Engine renders at left, around `x ≈ 200`** (per build plan Task 3.3) — and the train extends rightward toward `x ≈ 1080` as cars are added (1280px viewport). All world objects (enemies, projectiles, terrain effects) are stored in train-relative coordinates and the world scrolls past at constant `worldVelocity`. This means:
-- "Forward" / "ahead of train" = +x relative to the rightmost car. Enemies oncoming spawn at large +x.
-- "Behind" = −x relative to the engine. Enemies catching up spawn at large −x (rare in v1).
+- "Forward" / "ahead of train" = +x relative to the rightmost car.
+- "Behind" = −x relative to the engine.
 - "Above/below" = ±y from train center-y.
 - Background parallax is purely visual, separate layer with its own scroll multiplier.
 - Single `worldVelocity` constant (e.g. 50 px/sec) for v0 scroll speed.
 
 This gives clean math for projectile lead-targeting and consistent enemy spawn logic, and matches the build plan's downstream prompts which assume "Engine at left side of the screen."
+
+> **Amendment (post-Task 3.4, pre-Task 3.5):** The original draft of this gap stated *"Enemies oncoming spawn at large +x. Enemies catching up spawn at large −x (rare in v1)."* That was wrong — corrected by human (Josh) on 2026-05-05. The fantasy is **being chased**, so enemies spawn from every direction EXCEPT forward (+x). v1 spawn weights: ~50% rear (-x), ~25% top (-y), ~25% bottom (+y). The forward arc is the safe sector. See ADR-002 and DESIGN §6.
 
 ---
 
