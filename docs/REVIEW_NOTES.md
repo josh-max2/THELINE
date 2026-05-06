@@ -3,6 +3,19 @@
 > Findings from the reviewer agent (Opus). New entries added at the top.
 > Categories: BLOCKER | NEEDS-CHANGE | NIT | OK-AS-IS
 
+## 2026-05-05 — Task 4.2 reviewer pass (advisor)
+
+**Verdict:** 10-turret roster + 3 new behavior handlers ship clean. Pattern continuity (validators + pure helpers + Phaser shells, fifth time) is solid. Two real fixes applied in same task; three NITs deferred.
+
+**NEEDS-CHANGE (addressed in same commit):**
+1. **`import Phaser`** in moduleBehaviors was a value import where it should have been type-only — would crash unit tests in happy-dom the moment any test transitively imports the file. Reverted to `import type`.
+2. **RunScene SHUTDOWN didn't call MAS detach lifecycle hooks.** Added `ModuleAttachmentSystem.destroyAll()` and wired it into the SHUTDOWN handler. Phaser's child tree was cleaning the graphics anyway, but Phase 4.2.1 will add non-Phaser resources (stat-composition caches) that would silently leak.
+
+**NIT (tracked, not fixed):**
+- **Beam / aoe-pulse / support-aura have no automated tests** beyond visual screenshots. Build plan asked for vitest tests per behavior; per CLAUDE.md testing policy (Phaser-coupled → E2E only), this is acceptable, but the salvage>0 E2E only exercises auto-fire. Phase 4.2.1 should add E2E pixel sampling at known beam-target locations and aura-center positions to give each archetype real coverage.
+- **Dead JSON fields** — `targeting: "closest"` (auto-fire) and `effect`/`magnitude` (support-aura) are unread placeholders. Inline code comments added to flag them; honor in Phase 4.X when targeting strategies and damage-routing land.
+- **AOE pulse targets closest enemy's location, not cluster centroid.** Suboptimal vs. the genre's "hit the cluster" expectation. Phase 5 balance pass concern.
+
 ## 2026-05-05 — Phase 3 end-of-phase review (Task 3.7)
 
 **Scope:** Tasks 3.1–3.6. The vertical slice closes the loop:

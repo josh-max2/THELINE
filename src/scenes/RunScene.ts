@@ -89,6 +89,7 @@ export class RunScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribeSalvage?.();
+      this.moduleSystem.destroyAll();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });

@@ -6,7 +6,11 @@
 // the codebase will receive it. Add to it (don't replace) as new systems
 // come online (Task 3.5 will add CombatSystem, EnemySpawner refs, etc.).
 
-import Phaser from 'phaser';
+// Type-only import: Phaser is only referenced as a type here; all runtime
+// access goes through ctx.scene. A value import would pull Phaser's
+// CanvasFeatures init into the test bundle and crash happy-dom (same bug we
+// hit in Task 3.2). Advisor catch.
+import type Phaser from 'phaser';
 import type { BehaviorKind, ModuleData, QualifiedSlotId } from './types';
 import type { TrainSystem } from '../systems/TrainSystem';
 import type { CombatSystem } from '../systems/CombatSystem';
@@ -99,6 +103,10 @@ function parseHexColor(hex: string): number {
 interface AutoFireState {
   cooldownSeconds: number;
 }
+
+// NOTE: `behavior.targeting` ("closest" | future strategies) is JSON-only data
+// in v0; the handler always picks closest. Phase 4.X expands targeting modes
+// (highest-threat, lowest-HP%) per DESIGN §3.2 and reads this field then.
 
 const autoFireHandler: BehaviorHandler = {
   init(handle) {
@@ -211,6 +219,9 @@ moduleBehaviors.register('aoe-pulse', aoePulseHandler);
 // reduction, repair-over-time) is a no-op here because cars don't take
 // damage in Phase 3. Phase 4.X (boss/encounter system) will land car damage
 // and this handler will gain `effect: 'shield' | 'repair'` dispatch.
+//
+// JSON fields `behavior.effect` and `behavior.magnitude` are placeholders
+// in v0 — present in modules.json but unread until Phase 4.X.
 
 interface AuraState {
   auraGraphics?: Phaser.GameObjects.Graphics;

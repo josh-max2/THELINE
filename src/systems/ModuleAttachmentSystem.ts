@@ -106,6 +106,24 @@ export class ModuleAttachmentSystem {
     return this.tracker.size;
   }
 
+  /**
+   * Detach every attached module, firing each handler's `destroy()` lifecycle
+   * hook. Call from scene SHUTDOWN so behaviors holding non-Phaser resources
+   * (caches, listeners) clean up. Phase 4.2.1 will introduce stat-composition
+   * caches that need this.
+   */
+  destroyAll(): void {
+    // Snapshot keys — `detach` mutates the map.
+    const ids = Array.from(this.phaserAttachments.keys());
+    for (const qualifiedSlotId of ids) {
+      const colon = qualifiedSlotId.indexOf(':');
+      if (colon < 0) continue;
+      const carIndex = Number(qualifiedSlotId.slice(0, colon));
+      const slotId = qualifiedSlotId.slice(colon + 1);
+      this.detach(carIndex, slotId);
+    }
+  }
+
   private renderModule(
     module: ModuleData,
     car: PlacedCar,
