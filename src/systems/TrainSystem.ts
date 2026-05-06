@@ -62,6 +62,11 @@ export class TrainSystem {
     return this.cars.length;
   }
 
+  /** Read-only snapshot of cars (type + position) — used by build-share. */
+  snapshot(): ReadonlyArray<{ type: CarType; index: number }> {
+    return this.cars.map((c, i) => ({ type: c.type, index: i }));
+  }
+
   /**
    * Train is fixed in screen space — no per-frame movement. This stub exists
    * so callers can drive a uniform `update(dt)` loop; future tasks (e.g., HP

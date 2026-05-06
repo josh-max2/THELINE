@@ -14,6 +14,8 @@ import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
 import { salvageStore } from '../lib/salvageStore';
 import { unlocksStore } from '../lib/unlocksStore';
+import { encodeBuild, shareUrl, type SharedBuild } from '../lib/buildShare';
+import { loadoutStore } from '../lib/loadoutStore';
 import { PowerPanel } from '../ui/powerPanel';
 import { CrewPanel } from '../ui/crewPanel';
 
@@ -47,14 +49,15 @@ export class RunScene extends Phaser.Scene {
   create(): void {
     this.parallax = new ParallaxBackground(this, WORLD_VELOCITY_PX_PER_SEC);
 
-    // Default v1 train per build plan Task 4.1: [Engine, Weapon, Armor, Crew, Cargo].
-    // Engine constraints (leftmost, single, immovable) enforced by TrainSystem.canAddCar.
+    // Train layout is loadout-driven (Task 5.4) — HubScene populates loadoutStore
+    // from save / from Apply-Build before scene transition. v0 default is
+    // ['engine','weapon','armor','crew','cargo']. TrainSystem.addCar enforces
+    // the engine-first / single-engine / max-length rules per ADR-001.
     this.trainSystem = new TrainSystem(this);
-    this.trainSystem.addCar('engine');
-    this.trainSystem.addCar('weapon');
-    this.trainSystem.addCar('armor');
-    this.trainSystem.addCar('crew');
-    this.trainSystem.addCar('cargo');
+    for (const carType of loadoutStore.layout) {
+      this.trainSystem.addCar(carType);
+    }
+    const isCanonicalLayout = loadoutStore.isCanonicalDefault();
 
     this.enemySpawner = new EnemySpawner(this);
     this.combat = new CombatSystem(this, this.enemySpawner);
@@ -75,20 +78,24 @@ export class RunScene extends Phaser.Scene {
     this.powerSystem.bindCrewSystem(this.crewSystem);
     this.environment.bindCombatSystem(this.combat);
 
-    // Phase 4 Task 4.2: showcase 8 of 10 turrets across the 4 archetypes.
-    this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');   // kinetic auto-fire
-    this.moduleSystem.attach(0, 'engine-top-2', 'gatling');        // kinetic auto-fire (rapid)
-    this.moduleSystem.attach(1, 'weapon-top-1', 'flamethrower');   // fire beam
-    this.moduleSystem.attach(1, 'weapon-top-2', 'missile');        // explosive aoe-pulse
-    this.moduleSystem.attach(1, 'weapon-top-3', 'lightning');      // electric beam
-    this.moduleSystem.attach(2, 'armor-top-1', 'shield-emitter');  // support aura
-    this.moduleSystem.attach(2, 'armor-top-2', 'freeze-beam');     // cryo beam
-    this.moduleSystem.attach(3, 'crew-top-1', 'ice-mortar');       // cryo aoe-pulse
+    // Phase 4 Task 4.2: 8 default turrets — only attached when the layout
+    // matches the canonical (engine,weapon,armor,crew,cargo) order; an
+    // imported custom layout (e.g. via ?b=…) gets a clean slate and Phase 5.5
+    // Engineering Bay will own the per-loadout module set.
+    if (isCanonicalLayout) {
+      this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');
+      this.moduleSystem.attach(0, 'engine-top-2', 'gatling');
+      this.moduleSystem.attach(1, 'weapon-top-1', 'flamethrower');
+      this.moduleSystem.attach(1, 'weapon-top-2', 'missile');
+      this.moduleSystem.attach(1, 'weapon-top-3', 'lightning');
+      this.moduleSystem.attach(2, 'armor-top-1', 'shield-emitter');
+      this.moduleSystem.attach(2, 'armor-top-2', 'freeze-beam');
+      this.moduleSystem.attach(3, 'crew-top-1', 'ice-mortar');
 
-    // Phase 4 Task 4.2.1 demo: stack 2 items on basic-cannon.
-    // Effects: damage 10 + 5 = 15; fireRate 1.0 + 0.5 = 1.5.
-    this.itemSystem.attach(0, 'engine-top-1', 'rivet-rounds');
-    this.itemSystem.attach(0, 'engine-top-1', 'auto-loader');
+      // Phase 4 Task 4.2.1 demo: stack 2 items on basic-cannon.
+      this.itemSystem.attach(0, 'engine-top-1', 'rivet-rounds');
+      this.itemSystem.attach(0, 'engine-top-1', 'auto-loader');
+    }
 
     // Power weights initialized after modules attach (so demand snapshot is accurate).
     this.powerSystem.initializeDefaults();
@@ -179,6 +186,30 @@ export class RunScene extends Phaser.Scene {
     });
     document.body.appendChild(abandonBtn);
 
+    // Share-build button (Task 5.4) — copies a base64url build token to the
+    // clipboard. Sits below the abandon button so the right edge stays clean.
+    const shareBtn = document.createElement('button');
+    shareBtn.className = 'run-share';
+    shareBtn.textContent = 'Copy Build URL';
+    shareBtn.addEventListener('click', async () => {
+      const build = this.snapshotBuild();
+      const token = encodeBuild(build);
+      const url = shareUrl(window.location.origin + window.location.pathname, token);
+      try {
+        await navigator.clipboard.writeText(url);
+        shareBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          shareBtn.textContent = 'Copy Build URL';
+        }, 1500);
+      } catch {
+        // Clipboard API can fail when not in a user gesture context (rare since
+        // this IS a click handler) or in headless. Surface the URL via prompt
+        // so the player can still grab it.
+        window.prompt('Build URL — copy manually:', url);
+      }
+    });
+    document.body.appendChild(shareBtn);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribeSalvage?.();
       this.unsubscribeEncounters?.();
@@ -188,9 +219,26 @@ export class RunScene extends Phaser.Scene {
       this.crewPanel.destroy();
       this.slowTime.destroy();
       abandonBtn.remove();
+      shareBtn.remove();
       this.saveSystem.destroy(window, document);
       void this.saveSystem.flushSave();
     });
+  }
+
+  /** Snapshot the current train + attached modules + items for build sharing. */
+  private snapshotBuild(): SharedBuild {
+    const trainLayout = this.trainSystem.snapshot().map((c) => c.type);
+    const modSnap = this.moduleSystem.buildSnapshot();
+    const itemSnap = this.itemSystem.buildSnapshot();
+    return {
+      trainLayout,
+      attachments: modSnap.map((m) => ({
+        carIndex: m.carIndex,
+        slotId: m.slotId,
+        moduleId: m.moduleId,
+        itemIds: itemSnap.get(`${m.carIndex}:${m.slotId}` as const) ?? [],
+      })),
+    };
   }
 
   update(_time: number, deltaMs: number): void {

@@ -113,4 +113,13 @@ export class ItemAttachmentSystem {
   get totalItems(): number {
     return this.tracker.totalItems;
   }
+
+  /** Snapshot of all items keyed by qualifiedSlotId — for build sharing. */
+  buildSnapshot(): Map<QualifiedSlotId, string[]> {
+    const out = new Map<QualifiedSlotId, string[]>();
+    for (const { qualifiedSlotId, items } of this.tracker.list()) {
+      out.set(qualifiedSlotId, items.map((it) => it.id));
+    }
+    return out;
+  }
 }

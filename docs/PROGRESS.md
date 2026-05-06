@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 5 Tasks 5.1–5.3 done; 5.4 next)
+> Last updated: 2026-05-05 by claude (Phase 5 Tasks 5.1–5.4 done; 5.5 next)
 > Build phase: 5 (content + polish) — in progress
 > v1 ETA: 2026-07-15
 
@@ -11,13 +11,14 @@
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
 - Phase 4 core systems: ✅ (Tasks 4.1–4.10 done; reviewer pass logged)
-- Phase 5 content + polish: 🚧 (5.1 catalog ✅, 5.2 env matrix runtime ✅, 5.3 tech tree v0 ✅; 5.4 build-share next)
+- Phase 5 content + polish: 🚧 (5.1 catalog ✅, 5.2 env matrix runtime ✅, 5.3 tech tree v0 ✅, 5.4 build-share via URL ✅; 5.5 visual polish next)
 - Phase 6 launch prep: ⏳
 
 ## Recent activity (last 10 sessions)
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-05 | claude (PM) | main | **Phase 5 Task 5.4: Build sharing via URL.** Pure `buildShare.ts` — versioned compact format `{v:1, c:[…cars], m:[{c,s,m,i:[…]}]}` with single-letter keys; base64url encoder/decoder using TextEncoder + btoa/atob; `decodeBuild` returns `{ok}|{ok:false, reason}` for malformed/unsupported-version/invalid-shape; `buildTokenFromUrl(href)` reads `?b=` query; `shareUrl(originPath, token)` replaces existing `?b=` rather than duplicating. RunScene gets a "Copy Build URL" button (top-right under Abandon Run) — snapshots train/turrets/items via new `TrainSystem.snapshot`, `MAS.buildSnapshot`, `IAS.buildSnapshot` + `ItemStackTracker.list`, encodes, and writes via `navigator.clipboard.writeText` (falls back to `window.prompt` on permission failure). HubScene reads `?b=…` on construct and passes `{importToken, onApplyImport}` to HubOverlay; banner shows `Imported build: N cars, M turrets, K items.` with Apply Build / Dismiss buttons. **Advisor follow-up — Apply Build was inert in initial pass** (3rd time same shape of bug). Fixed by adding `loadoutStore` singleton (mirrors salvageStore/unlocksStore pattern); HubScene populates it on save load + on Apply Build, RunScene now iterates `loadoutStore.layout` instead of hardcoded `addCar` calls. Default 8-turret attach only runs when layout matches the canonical (engine,weapon,armor,crew,cargo) — non-canonical imports get a clean slate (Phase 5.5 Engineering Bay will own per-loadout modules). v0 only round-trips trainLayout; modules + items deferred to 5.5. New `loadoutStore.test.ts` (+7) and `buildShareRoundTrip.test.ts` (+3): encode→decode→setLayout matches; apply-import survives reload; malformed token leaves layout untouched. Visual proof: applied-custom-layout.png shows Engine+3×Weapon+Cargo train with 0 turrets (correct — non-canonical layout) and 4× "(unassigned)" crew (correct — no Crew Car). **306 unit pass** (+27: 17 buildShare + 7 loadoutStore + 3 round-trip), **3/3 E2E pass**, TS strict. | 306 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 5 Task 5.3 follow-up (advisor catch).** First closeout shipped inert unlocks — same shape as Task 5.2's catch. Wired one consumer end-to-end + a round-trip test. New `unlocksStore` singleton (mirrors salvageStore) holds the activeUnlocks tag set; both HubScene + RunScene populate it on save load + TechTreeSystem.purchase pushes to it. moduleBehaviors `effectiveStats` now multiplies damage + damagePerSecond by `GLOBAL_DAMAGE_BUFF_MULT` (1.1) when `unlocksStore.has('global-damage-buff')`. RunScene HUD shows a green `Unlocks: …` line listing active tag names so purchases are visible at runtime. New `tests/unit/techTreeRoundTrip.test.ts` simulates: session-1 buys + flushSave → reset salvage/unlocks → session-2 SaveSystem.init → loadFromSave → owned + unlocksStore restored. Catches the "data written but no consumer reads it" class of bug. Visual proof: tech tree modal shows Frostworks + Reinforced Rounds OWNED (green border); RunScene HUD shows "Unlocks: category-cryo, global-damage-buff". **279 unit pass** (+7: 5 unlocksStore + 2 round-trip), **3/3 E2E pass**. | 279 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 5 Task 5.3: Tech tree v0.** New `techTree.json` (8 nodes across 3 tiers: Spare Parts/Frostworks at T1, Pyrotechnics/Demolitionist/Reinforced Rounds at T2, Storm Caller/Eternal Engine/Salvage Magnets at T3). New `TechNodeData` + `TechUnlockTag` types. Pure `techTreeMath.ts` (canPurchase with reasons: already-owned/insufficient-salvage/prereqs-not-met/unknown-node; tier prereq = "any tier-(N-1) owned"; activeUnlocks flattens grants). New `TechTreeSystem.ts` shell — owns purchased-set, subscribe/notify, persists via SaveSystem.updateHubState; uses salvageStore.setTotal to debit (salvageStore.add early-returns on negatives). New DOM `techTreePanel.ts` modal — 3 tier lanes, per-node state computed every render (owned / affordable / cant-afford / locked), click-to-purchase only on affordable. HubScene now constructs its own SaveSystem + TechTreeSystem on enter, hydrates from save, and tears down on shutdown (sharing localforage backing with RunScene). HubOverlay accepts `{ techTree }` deps; Tech Tree card becomes clickable when system is injected, opens modal, summary line ticks on subscribe. **Save schema bumped v2 → v3** with `purchasedTechIds: string[]` field + v2→v3 migration that preserves all v2 fields and seeds purchasedTechIds=[]; isValidV3 + tests; all existing v2-assuming tests updated. **272 unit pass** (+18 techTreeMath, +8 techTreeSystem, +8 saveSchema/saveStorage v3 retests), **3/3 E2E pass**. | 272 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 5 Task 5.2 follow-up (advisor catch).** Closeout audit revealed 3/3 E2E pre-dated 5.2 — none touched the new env zone runtime. Switched EnvironmentSystem to `import type Phaser` (mirrors moduleBehaviors.ts pattern, avoids happy-dom canvas crash) and added `tests/unit/environmentSystem.test.ts` with stub scene/combat: spawnZone tracks zone w/ alpha=1, update(dt) calls combat.damageEnemy at rate × dt, enemies outside radius skipped, alpha fades linearly, self-destruct at duration, multiple zones independent, destroy() clears, biome change doesn't affect already-spawned zones (cell snapshot). Also fixed PROGRESS.md typo: SaveSystem v2 added `hubState`, not `runState`. **240 unit pass** (+9 env system), **3/3 E2E pass**. | 240 unit ✅ · 3 E2E ✅ |
@@ -48,12 +49,10 @@
 
 ## Next priorities (queue, ordered) — Phase 5 in progress
 
-1. **READY** — Phase 5 Task 5.3: Tech tree v0. Persistent meta-progression unlock graph spend Salvage. Hub Tech Tree card → tree UI; data-driven nodes; persists across runs via SaveSystem v2 runState extension.
-2. **NEXT** — Phase 5 Task 5.4: Build sharing via URL (encode loadout to ?b=…).
-3. **NEXT** — Phase 5 Task 5.5: Visual polish (particles, hit feedback, screen shake).
-4. **NEXT** — Phase 5 Task 5.6: Audio (sfx + music via Web Audio).
-5. **NEXT** — Phase 5 Task 5.7: Tutorial overlay.
-6. **NEXT** — Phase 5 Task 5.8: Idle income + auto-run.
+1. **READY** — Phase 5 Task 5.5: Visual polish (particles, hit feedback, screen shake, kill flourish).
+2. **NEXT** — Phase 5 Task 5.6: Audio v0 (sfx + music via Web Audio).
+3. **NEXT** — Phase 5 Task 5.7: Tutorial overlay (first-run modal).
+4. **NEXT** — Phase 5 Task 5.8: Idle income + auto-run (hub idle Salvage trickle + auto-relaunch on death).
 
 ## Open questions for human (Josh)
 
@@ -93,6 +92,9 @@
 - `docs/screenshots/task5-3-tech-tree.png` — Phase 5 Task 5.3: Tech Tree modal, salvage seeded to 200 via IDB; Tier 1 nodes (Spare Parts, Frostworks) show "CLICK TO PURCHASE" + brighter borders, Tier 2 + Tier 3 dimmed with "REQUIRES EARLIER TIER".
 - `docs/screenshots/task5-3-tech-tree-purchased.png` — Task 5.3 follow-up: same modal with t1-frostworks + t2-reinforced-rounds OWNED (green borders); Tier 3 nodes now affordable since prereqs met.
 - `docs/screenshots/task5-3-runscene-with-unlocks.png` — Task 5.3 follow-up: RunScene mid-Travel encounter with green "Unlocks: category-cryo, global-damage-buff" HUD line at bottom, proving consumer wiring + cross-scene state restore from save.
+- `docs/screenshots/task5-4-run-share-button.png` — Task 5.4: RunScene with "Copy Build URL" button visible top-right (showing "Copied!" success state).
+- `docs/screenshots/task5-4-hub-import-banner.png` — Task 5.4: HubScene with `?b=<token>` showing import banner "Imported build: 5 cars, 8 turrets, 2 items" + Apply / Dismiss.
+- `docs/screenshots/task5-4-applied-custom-layout.png` — Task 5.4 follow-up proof: imported `engine + 3×weapon + cargo` layout actually applied to the run; 0 turrets attached (non-canonical layout), Crew "(unassigned)" because no Crew Car in this layout — proves loadoutStore→TrainSystem.addCar consumer wiring.
 
 ## Audit log
 

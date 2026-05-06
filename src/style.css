@@ -365,3 +365,66 @@ body {
 .run-abandon:hover {
   background: rgba(120, 50, 50, 0.85);
 }
+
+/* Share-build button (Task 5.4) — sits below abandon. */
+.run-share {
+  position: fixed;
+  top: 50px;
+  right: 16px;
+  z-index: 100;
+  padding: 6px 12px;
+  background: rgba(40, 60, 100, 0.7);
+  border: 1px solid #4a90d8;
+  border-radius: 3px;
+  color: #c0e0ff;
+  font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+}
+.run-share:hover {
+  background: rgba(60, 90, 140, 0.85);
+}
+
+/* Import-build banner shown above the hub grid (Task 5.4). */
+.hub-import-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(40, 60, 100, 0.55);
+  border: 1px solid #4a90d8;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+.hub-import-heading {
+  flex: 1;
+  color: #c0e0ff;
+  letter-spacing: 0.04em;
+}
+.hub-import-apply {
+  padding: 6px 14px;
+  background: #4a90d8;
+  border: none;
+  border-radius: 3px;
+  color: #05070b;
+  font: 700 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.hub-import-apply:hover {
+  background: #6ab0f8;
+}
+.hub-import-apply:disabled {
+  background: #2a4a70;
+  color: #80a0c0;
+  cursor: default;
+}
+.hub-import-dismiss {
+  padding: 6px 12px;
+  background: rgba(60, 30, 30, 0.7);
+  border: 1px solid #803030;
+  border-radius: 3px;
+  color: #f0c0c0;
+  font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+}

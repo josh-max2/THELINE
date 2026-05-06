@@ -146,6 +146,18 @@ export class ModuleAttachmentSystem {
     return this.tracker.list().map((r) => ({ qualifiedSlotId: r.qualifiedSlotId, module: r.module }));
   }
 
+  /** Snapshot of attachments as { carIndex, slotId, moduleId } for build sharing. */
+  buildSnapshot(): Array<{ carIndex: number; slotId: string; moduleId: string }> {
+    return this.tracker.list().map((r) => {
+      const colon = r.qualifiedSlotId.indexOf(':');
+      return {
+        carIndex: Number(r.qualifiedSlotId.slice(0, colon)),
+        slotId: r.qualifiedSlotId.slice(colon + 1),
+        moduleId: r.module.id,
+      };
+    });
+  }
+
   /**
    * Detach every attached module, firing each handler's `destroy()` lifecycle
    * hook. Call from scene SHUTDOWN so behaviors holding non-Phaser resources

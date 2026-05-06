@@ -4,6 +4,8 @@ import { salvageStore } from '../lib/salvageStore';
 import { SaveSystem } from '../systems/SaveSystem';
 import { LocalforageStorage } from '../lib/saveStorage';
 import { TechTreeSystem } from '../systems/TechTreeSystem';
+import { buildTokenFromUrl } from '../lib/buildShare';
+import { loadoutStore } from '../lib/loadoutStore';
 
 /**
  * Between-run UI. Per DESIGN §10 + build plan Task 4.9 + Task 5.3.
@@ -42,13 +44,29 @@ export class HubScene extends Phaser.Scene {
     // is acceptable on initial Hub load (same pattern as RunScene).
     void this.saveSystem.init().then((data) => {
       this.techTree?.loadFromSave(data.hubState.purchasedTechIds);
+      loadoutStore.setLayout(data.hubState.trainLayout);
     });
 
+    const importToken = buildTokenFromUrl(window.location.href);
     this.overlay = new HubOverlay(
       document.body,
       salvageStore.total,
       () => this.depart(),
-      { techTree: this.techTree },
+      {
+        techTree: this.techTree,
+        importToken,
+        onApplyImport: (build) => {
+          // v0 only persists + applies trainLayout. Module/item slot mappings
+          // are deferred to Phase 5.5 Engineering Bay (save schema doesn't
+          // yet store per-slot module ids). Pushing to loadoutStore makes the
+          // change immediately visible to the next DEPART without a reload.
+          this.saveSystem?.updateHubState({ trainLayout: build.trainLayout });
+          loadoutStore.setLayout(build.trainLayout);
+          void this.saveSystem?.flushSave();
+          const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+          window.history.replaceState({}, '', cleanUrl);
+        },
+      },
     );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

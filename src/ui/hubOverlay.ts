@@ -5,11 +5,19 @@
 import type { TechTreeSystem } from '../systems/TechTreeSystem';
 import { TechTreePanel } from './techTreePanel';
 import { salvageStore } from '../lib/salvageStore';
+import { decodeBuild, type SharedBuild } from '../lib/buildShare';
 
 const PLACEHOLDER_NOTE = 'Phase 5 polish';
 
 export interface HubOverlayDeps {
   techTree?: TechTreeSystem;
+  /** Build token passed via ?b=…; if present, Hub shows an Import Build banner. */
+  importToken?: string | null;
+  /**
+   * Called when player clicks "Apply Build" in the import banner. Receives the
+   * decoded build. Hub-side wiring should persist via SaveSystem.updateHubState.
+   */
+  onApplyImport?: (build: SharedBuild) => void;
 }
 
 export class HubOverlay {
@@ -42,6 +50,12 @@ export class HubOverlay {
     this.unsubSalvage = salvageStore.subscribe((total) => {
       this.salvageEl.textContent = `Salvage: ${total}`;
     });
+
+    // Import-from-URL banner (Task 5.4) — shown when ?b=… is present.
+    if (deps.importToken) {
+      const banner = this.makeImportBanner(deps.importToken, deps.onApplyImport);
+      if (banner) this.root.appendChild(banner);
+    }
 
     const grid = document.createElement('div');
     grid.className = 'hub-grid';
@@ -117,6 +131,50 @@ export class HubOverlay {
     return panel;
   }
 
+  /**
+   * Render the Import-Build banner. Returns null if the token is unrecoverable
+   * (silently — no point showing an error banner if the URL is garbage).
+   */
+  private makeImportBanner(
+    token: string,
+    onApply?: (build: SharedBuild) => void,
+  ): HTMLDivElement | null {
+    const decoded = decodeBuild(token);
+    const banner = document.createElement('div');
+    banner.className = 'hub-import-banner';
+
+    const heading = document.createElement('div');
+    heading.className = 'hub-import-heading';
+
+    const dismiss = document.createElement('button');
+    dismiss.className = 'hub-import-dismiss';
+    dismiss.textContent = 'Dismiss';
+    dismiss.addEventListener('click', () => banner.remove());
+
+    if (!decoded.ok) {
+      heading.textContent = `Build URL invalid (${decoded.reason}).`;
+      banner.appendChild(heading);
+      banner.appendChild(dismiss);
+      return banner;
+    }
+
+    const summary = describeBuild(decoded.build);
+    heading.textContent = `Imported build: ${summary}`;
+    banner.appendChild(heading);
+
+    const apply = document.createElement('button');
+    apply.className = 'hub-import-apply';
+    apply.textContent = 'Apply Build';
+    apply.addEventListener('click', () => {
+      onApply?.(decoded.build);
+      apply.disabled = true;
+      apply.textContent = 'Applied';
+    });
+    banner.appendChild(apply);
+    banner.appendChild(dismiss);
+    return banner;
+  }
+
   private makePanel(title: string, badge: string, body: string): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'hub-panel';
@@ -132,4 +190,11 @@ export class HubOverlay {
     panel.appendChild(p);
     return panel;
   }
+}
+
+function describeBuild(build: SharedBuild): string {
+  const cars = build.trainLayout.length;
+  const turrets = build.attachments.length;
+  const items = build.attachments.reduce((n, a) => n + a.itemIds.length, 0);
+  return `${cars} car${cars === 1 ? '' : 's'}, ${turrets} turret${turrets === 1 ? '' : 's'}, ${items} item${items === 1 ? '' : 's'}.`;
 }

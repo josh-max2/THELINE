@@ -63,6 +63,14 @@ export class ItemStackTracker {
     return this.stacks.size;
   }
 
+  /** Iterate every (qualifiedSlotId, items[]) pair. Used by build-share. */
+  list(): ReadonlyArray<{ qualifiedSlotId: QualifiedSlotId; items: ReadonlyArray<ItemData> }> {
+    return Array.from(this.stacks.entries()).map(([qualifiedSlotId, items]) => ({
+      qualifiedSlotId,
+      items: [...items],
+    }));
+  }
+
   clear(): void {
     this.stacks.clear();
   }
