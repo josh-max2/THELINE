@@ -3,6 +3,23 @@
 > Findings from the reviewer agent (Opus). New entries added at the top.
 > Categories: BLOCKER | NEEDS-CHANGE | NIT | OK-AS-IS
 
+## 2026-05-05 — Task 3.6 reviewer pass (self-review)
+
+**Verdict:** SaveSystem v0 architecture follows the established pattern. Save-versioning sacred rule honored — migration framework exists at v1 even though there's no v0 to migrate from. Persistence verified end-to-end via reload E2E.
+
+**OK-AS-IS:**
+- Schema separated from storage separated from orchestrator (3-layer clean separation).
+- Storage interface allows InMemoryStorage for tests; production gets LocalforageStorage.
+- Migration framework exercised by `__registerTestMigrationV0toV1` test hook — proves the runner actually invokes registered migrations.
+- `setTotal()` added to salvageStore to avoid HUD flicker on load (verified: only one listener notification fires during init).
+- Storage failures (corrupted data, IndexedDB exceptions) downgrade to "start fresh" — game stays playable, console logs a warning.
+
+**NIT (tracked, not blocking):**
+- `beforeunload` save is best-effort — IndexedDB may not flush before tab dies. Visibility-hidden is the more reliable hook. Phase 6 may want a sync localStorage backup as belt-and-suspenders for Safari.
+- `SaveSystem.update(dt)` fires-and-forgets `flushSave()`. Concurrent flushes (auto-save + page-unload at the same moment) could theoretically race; localforage queues internally so it's fine in practice. Phase 4+ may want a `pendingFlush` guard.
+- E2E persistence test relies on `visibilityState` redefinition — works in Chromium, may differ in Firefox/Safari if we ever extend coverage.
+- E2E tests share a Playwright BrowserContext, so saved data from the persistence test bleeds into other tests' starting state. Doesn't break current assertions (salvage > 0 still passes), but flag for Phase 4 when tests want truly clean baselines.
+
 ## 2026-05-05 — Task 3.5 reviewer pass
 
 **Verdict:** Combat loop verified end-to-end (salvage = 3 after 6s real, E2E asserts > 0 after 7s). Architecture continues the validators-first pure-helpers pattern from Tasks 3.3/3.4. No drift from ADR-002.

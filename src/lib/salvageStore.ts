@@ -18,6 +18,14 @@ class SalvageStore {
     for (const l of this.listeners) l(this._total);
   }
 
+  /** Set the total directly — used by SaveSystem to restore on load.
+   * Fires one listener notification (vs. reset() + add() which fires twice). */
+  setTotal(value: number): void {
+    if (value === this._total) return;
+    this._total = value;
+    for (const l of this.listeners) l(this._total);
+  }
+
   reset(): void {
     this._total = 0;
     for (const l of this.listeners) l(0);

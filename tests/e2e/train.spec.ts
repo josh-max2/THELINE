@@ -70,4 +70,27 @@ test.describe('Phase 3 / Tasks 3.3–3.5 — train + module + combat', () => {
     expect(salvage, 'salvage should be tracked on window').toBeDefined();
     expect(salvage, 'cannon should kill at least one scout in 7s').toBeGreaterThan(0);
   });
+
+  test('salvage persists across page reload (Task 3.6)', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(6000);
+
+    const beforeReload = await page.evaluate(() => window.__salvage?.total);
+    expect(beforeReload, 'salvage should accumulate before reload').toBeGreaterThan(0);
+
+    // Force a save flush by simulating visibility-hidden (the lifecycle hook fires flushSave).
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    // Give the async IndexedDB write a moment to land.
+    await page.waitForTimeout(300);
+
+    await page.reload();
+    // Wait for SaveSystem.init() to load + restore. Init is async; let it settle.
+    await page.waitForTimeout(1500);
+
+    const afterReload = await page.evaluate(() => window.__salvage?.total);
+    expect(afterReload, 'salvage should be restored from save').toBeGreaterThanOrEqual(beforeReload!);
+  });
 });

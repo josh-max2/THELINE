@@ -3,6 +3,8 @@ import { TrainSystem } from '../systems/TrainSystem';
 import { ModuleAttachmentSystem } from '../systems/ModuleAttachmentSystem';
 import { EnemySpawner } from '../systems/EnemySpawner';
 import { CombatSystem } from '../systems/CombatSystem';
+import { SaveSystem } from '../systems/SaveSystem';
+import { LocalforageStorage } from '../lib/saveStorage';
 import { ParallaxBackground } from '../lib/parallaxBackground';
 import { salvageStore } from '../lib/salvageStore';
 
@@ -14,6 +16,7 @@ export class RunScene extends Phaser.Scene {
   private moduleSystem!: ModuleAttachmentSystem;
   private enemySpawner!: EnemySpawner;
   private combat!: CombatSystem;
+  private saveSystem!: SaveSystem;
   private parallax!: ParallaxBackground;
   private salvageText!: Phaser.GameObjects.Text;
   private unsubscribeSalvage?: () => void;
@@ -35,7 +38,7 @@ export class RunScene extends Phaser.Scene {
     this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');
 
     this.add
-      .text(16, 16, 'THE LINE — Phase 3 · Task 3.5 (Combat)', {
+      .text(16, 16, 'THE LINE — Phase 3 · Task 3.6 (Save)', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#7b8aa3',
@@ -51,13 +54,20 @@ export class RunScene extends Phaser.Scene {
       .setOrigin(1, 0)
       .setDepth(100);
 
-    salvageStore.reset();
     this.unsubscribeSalvage = salvageStore.subscribe((total) => {
       this.salvageText.setText(`Salvage: ${total}`);
     });
 
+    // SaveSystem loads existing data + restores salvageStore. Fire-and-forget;
+    // the HUD will tick from "Salvage: 0" to the loaded value the moment init resolves.
+    this.saveSystem = new SaveSystem(new LocalforageStorage());
+    void this.saveSystem.init();
+    this.saveSystem.registerLifecycleHandlers(window, document);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribeSalvage?.();
+      this.saveSystem.destroy(window, document);
+      void this.saveSystem.flushSave();
     });
   }
 
@@ -68,5 +78,6 @@ export class RunScene extends Phaser.Scene {
     this.enemySpawner.update(dt);
     this.combat.update(dt);
     this.moduleSystem.update(dt);
+    this.saveSystem.update(dt);
   }
 }
