@@ -325,7 +325,7 @@
         { "kind": "tri", "points": [[-3, -1], [0, -6], [3, -1]], "fill": "#a0f0ff" }
       ]
     },
-    "behavior": { "kind": "aoe-pulse", "fireRate": 0.2, "damage": 0, "radius": 150, "range": 400, "color": "#a0f0ff", "power": 3 }
+    "behavior": { "kind": "aoe-pulse", "fireRate": 0.4, "damage": 4, "radius": 150, "range": 400, "color": "#a0f0ff", "power": 3 }
   },
   "shield-emitter": {
     "id": "shield-emitter",

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import modulesRaw from '../../src/data/modules.json';
 import type { ModuleData } from '../../src/lib/types';
+import { moduleBehaviors } from '../../src/lib/moduleBehaviors';
 
 const modules = modulesRaw as unknown as Record<string, ModuleData>;
 
@@ -37,18 +38,17 @@ describe('modules.json — Phase 5 Task 5.1 catalog', () => {
     }
   });
 
-  test('every module references a registered behavior kind', () => {
-    const validKinds = new Set([
-      'auto-fire',
-      'beam',
-      'shield',
-      'repair',
-      'aoe-pulse',
-      'support-aura',
-      'terrain-effect',
-    ]);
+  // Tightened in Phase 6.1 audit — only allow kinds that have a registered
+  // handler, not just kinds present in the BehaviorKind type union. The union
+  // declares `shield`/`repair`/`terrain-effect` as future kinds; if a module
+  // ever uses them before a handler ships, MAS.attach throws at runtime —
+  // this test catches that earlier.
+  test('every module references a behavior kind that has a registered handler', () => {
     for (const [id, m] of Object.entries(modules)) {
-      expect(validKinds.has(m.behavior.kind), `${id}: ${m.behavior.kind}`).toBe(true);
+      expect(
+        moduleBehaviors.has(m.behavior.kind),
+        `${id}: ${m.behavior.kind} has no handler registered`,
+      ).toBe(true);
     }
   });
 
