@@ -15,6 +15,9 @@ const config: Phaser.Types.Core.GameConfig = {
   render: {
     pixelArt: false,
     antialias: true,
+    // Allow Playwright/in-page tooling to read pixel data from the WebGL
+    // canvas via toDataURL / drawImage. Tiny perf cost; worth it for testability.
+    preserveDrawingBuffer: true,
   },
 };
 

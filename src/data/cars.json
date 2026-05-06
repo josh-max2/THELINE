@@ -1,0 +1,91 @@
+{
+  "engine": {
+    "type": "engine",
+    "name": "Engine",
+    "hp": 400,
+    "width": 96,
+    "height": 64,
+    "slots": [
+      { "id": "engine-top-1", "type": "top", "x": -16, "y": -36 },
+      { "id": "engine-top-2", "type": "top", "x": 16, "y": -36 }
+    ],
+    "render": {
+      "fill": "#2c3e58",
+      "stroke": "#0c1828",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "rect", "x": -48, "y": -24, "w": 96, "h": 48 },
+        { "kind": "rect", "x": -14, "y": -36, "w": 28, "h": 12, "fill": "#3a4f72" },
+        { "kind": "rect", "x": 18, "y": -42, "w": 8, "h": 18, "fill": "#1a2334" },
+        { "kind": "circle", "x": 22, "y": -46, "r": 4, "fill": "#4a5d80" },
+        { "kind": "circle", "x": -30, "y": 24, "r": 7, "fill": "#1a2334" },
+        { "kind": "circle", "x": 0, "y": 24, "r": 7, "fill": "#1a2334" },
+        { "kind": "circle", "x": 30, "y": 24, "r": 7, "fill": "#1a2334" }
+      ]
+    }
+  },
+  "weapon": {
+    "type": "weapon",
+    "name": "Weapon Car",
+    "hp": 250,
+    "width": 96,
+    "height": 56,
+    "slots": [],
+    "render": {
+      "fill": "#3a3a4a",
+      "stroke": "#0c0c14",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+      ]
+    }
+  },
+  "armor": {
+    "type": "armor",
+    "name": "Armor Car",
+    "hp": 600,
+    "width": 96,
+    "height": 56,
+    "slots": [],
+    "render": {
+      "fill": "#3a3024",
+      "stroke": "#1a140c",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+      ]
+    }
+  },
+  "crew": {
+    "type": "crew",
+    "name": "Crew Car",
+    "hp": 300,
+    "width": 96,
+    "height": 56,
+    "slots": [],
+    "render": {
+      "fill": "#2c4a3a",
+      "stroke": "#0c1c14",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+      ]
+    }
+  },
+  "cargo": {
+    "type": "cargo",
+    "name": "Cargo Car",
+    "hp": 150,
+    "width": 96,
+    "height": 56,
+    "slots": [],
+    "render": {
+      "fill": "#4a3a2c",
+      "stroke": "#1c140c",
+      "strokeWidth": 2,
+      "shapes": [
+        { "kind": "rect", "x": -48, "y": -20, "w": 96, "h": 40 }
+      ]
+    }
+  }
+}
