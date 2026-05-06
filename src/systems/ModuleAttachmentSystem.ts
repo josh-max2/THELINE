@@ -12,6 +12,7 @@ import type { CombatSystem } from './CombatSystem';
 import type { ItemAttachmentSystem } from './ItemAttachmentSystem';
 import type { PowerSystem } from './PowerSystem';
 import type { CrewSystem } from './CrewSystem';
+import type { EnvironmentSystem } from './EnvironmentSystem';
 
 const MODULES = modulesDataRaw as unknown as Record<string, ModuleData>;
 
@@ -37,6 +38,7 @@ export class ModuleAttachmentSystem {
   private items?: ItemAttachmentSystem;
   private power?: PowerSystem;
   private crew?: CrewSystem;
+  private environment?: EnvironmentSystem;
 
   constructor(scene: Phaser.Scene, train: TrainSystem, combat: CombatSystem) {
     this.scene = scene;
@@ -57,6 +59,11 @@ export class ModuleAttachmentSystem {
   /** Wire the CrewSystem so behavior handlers can read crew buffs. */
   bindCrewSystem(crew: CrewSystem): void {
     this.crew = crew;
+  }
+
+  /** Wire EnvironmentSystem so aoe-pulse handlers can spawn matrix zones. */
+  bindEnvironmentSystem(environment: EnvironmentSystem): void {
+    this.environment = environment;
   }
 
   /** Read the turret data at a qualified slot. Used by IAS during attach validation. */
@@ -181,6 +188,9 @@ export class ModuleAttachmentSystem {
     if (!this.crew) {
       throw new Error('ModuleAttachmentSystem.bindCrewSystem(...) must be called before update()');
     }
+    if (!this.environment) {
+      throw new Error('ModuleAttachmentSystem.bindEnvironmentSystem(...) must be called before update()');
+    }
     return {
       scene: this.scene,
       train: this.train,
@@ -188,6 +198,7 @@ export class ModuleAttachmentSystem {
       items: this.items,
       power: this.power,
       crew: this.crew,
+      environment: this.environment,
     };
   }
 }

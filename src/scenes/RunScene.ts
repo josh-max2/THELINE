@@ -62,13 +62,17 @@ export class RunScene extends Phaser.Scene {
     this.itemSystem = new ItemAttachmentSystem(this, this.trainSystem);
     this.powerSystem = new PowerSystem(this.trainSystem, this.moduleSystem);
     this.crewSystem = new CrewSystem(this.trainSystem);
+    this.environment = new EnvironmentSystem(this, this.parallax);
 
-    // Resolve cross-system references.
+    // Resolve all cross-system references BEFORE any attach() calls — handler.init()
+    // calls context() which throws if any system is unbound (Task 5.2 catch).
     this.moduleSystem.bindItemSystem(this.itemSystem);
     this.moduleSystem.bindPowerSystem(this.powerSystem);
     this.moduleSystem.bindCrewSystem(this.crewSystem);
+    this.moduleSystem.bindEnvironmentSystem(this.environment);
     this.itemSystem.bindModuleSystem(this.moduleSystem);
     this.powerSystem.bindCrewSystem(this.crewSystem);
+    this.environment.bindCombatSystem(this.combat);
 
     // Phase 4 Task 4.2: showcase 8 of 10 turrets across the 4 archetypes.
     this.moduleSystem.attach(0, 'engine-top-1', 'basic-cannon');   // kinetic auto-fire
@@ -94,9 +98,6 @@ export class RunScene extends Phaser.Scene {
     this.crewPanel = new CrewPanel(document.body, this.trainSystem, this.crewSystem);
 
     this.slowTime = new SlowTimeSystem(this);
-
-    // Environment must exist before encounters start so biome tint applies on first advance.
-    this.environment = new EnvironmentSystem(this.parallax);
 
     // Encounter cycle drives EnemySpawner per template + biome tint via EnvironmentSystem.
     this.encounters = new EncounterSystem(this.enemySpawner);
@@ -183,6 +184,9 @@ export class RunScene extends Phaser.Scene {
     this.encounters.update(dt);
     this.enemySpawner.update(dt);
     this.combat.update(dt);
+    // EnvironmentSystem ticks env damage zones (Phase 5 Task 5.2). Runs after
+    // combat so newly-spawned zones don't double-tick on creation frame.
+    this.environment.update(dt);
     this.powerSystem.update(dt);
     this.moduleSystem.update(dt);
     // SaveSystem auto-save uses real time — saves should still happen at 30s wall-clock.

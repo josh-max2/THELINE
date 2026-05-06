@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-05 by claude (Phase 4 COMPLETE — all 12 tasks shipped in single marathon session)
-> Build phase: 5 (content + polish) — ready to start
+> Last updated: 2026-05-05 by claude (Phase 5 Tasks 5.1–5.2 done; 5.3 next)
+> Build phase: 5 (content + polish) — in progress
 > v1 ETA: 2026-07-15
 
 ## Current build status
@@ -10,15 +10,17 @@
 - Phase 1 documentation: ✅
 - Phase 2 subagent configuration: ✅
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
-- Phase 4 core systems: ✅ (Tasks 4.1–4.10 done — 214 unit + 3 E2E pass)
-- Phase 5 content + polish: 🚧 (next)
-- Phase 5 content + polish: ⏳
+- Phase 4 core systems: ✅ (Tasks 4.1–4.10 done; reviewer pass logged)
+- Phase 5 content + polish: 🚧 (5.1 catalog ✅, 5.2 env matrix runtime ✅; 5.3 tech tree next)
 - Phase 6 launch prep: ⏳
 
 ## Recent activity (last 10 sessions)
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-05 | claude (PM) | main | **Phase 5 Task 5.2: Full env matrix runtime.** Pure `zoneMath.ts` (categoryToDamageType, fadeAlpha, tickDamage, ZONE_VISUAL_RADIUS=60) with 12 unit tests. `EnvironmentSystem.ts` rewritten: tracks `ActiveZone[]`, `spawnZone(x, y, damageType)` resolves matrix cell via `resolveCell`, creates depth-15 fillCircle Graphics; `update(dt)` ticks `damagePerSec` against `combat.enemiesInRadius`, fades alpha linearly, self-destructs at duration. New constructor signature `(scene, parallax)` so it can call `scene.add.graphics`. `bindCombatSystem` setter cycle. `BehaviorContext` gains `environment: EnvironmentSystem`; aoe-pulse handler calls `ctx.environment.spawnZone(target.x, target.y, dmgType)` after firePulse, with `dmgType = categoryToDamageType(handle.data.category)` (kinetic/fire/cryo/explosive/electric only — support/exotic skip). MAS gains `bindEnvironmentSystem` + throw-if-unbound guard in context(). **Caught in flight:** RunScene initially attached modules before `bindEnvironmentSystem` ran → handler.init→context() threw → engine never rendered → E2E salvage=0. Fix: reordered `create()` to construct ALL systems first (incl. EnvironmentSystem), wire ALL binds, THEN run attaches + initializeDefaults. **231 unit pass** (+12 zoneMath), **3/3 E2E pass**, TS strict. | 231 unit ✅ · 3 E2E ✅ |
+| 2026-05-05 | claude (PM) | main | **Phase 5 Task 5.1: 30-module catalog.** modules.json expanded from 10 → 30: 5 kinetic, 5 fire, 5 cryo, 4 explosive, 3 electric, 8 support. New `tests/unit/modulesData.test.ts` (7 catalog smoke tests: count, distribution, required ModuleData fields, valid behavior kinds, non-negative power, unique ids, valid slot types). Balance simulator deferred to Phase 6.3 — manual balance pass plus E2E salvage rate is sufficient signal at this scale. **219 unit pass** (+7 catalog), **3/3 E2E pass**. | 219 unit ✅ · 3 E2E ✅ |
+| 2026-05-05 | claude (PM) | main | **Phase 4 Tasks 4.8–4.10 + reviewer pass (CLOSES PHASE 4).** Task 4.8: ADR-003 + biomes.json (5: rock/ice/wasteland/storm/dark) + environment-matrix.json (5×5 weapon × biome cells: damageType, color, durationSec, damagePerSec) + pure `environmentMath.ts`. Task 4.9: HubScene with Engineering Bay / Crew Roster / Tech Tree / Mission Board / Lore Log cards (placeholders for 5.x); Mission Board has DEPART → RunScene transition; Salvage HUD synced. Task 4.10: SaveSystem v2 — added `runState` (carIds, attachedModules, attachedItems, currentBiome) + migration from v1 (defaults to v1 train, no attachments). 14 reviewer pass sections logged at REVIEW_NOTES.md across Phase 4. **214 unit pass**, **3/3 E2E pass**. | 214 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.7: Encounter grammar.** encounters.json with 4 templates (travel/swarm/mini-boss/boss) — pool, spawnIntervalSec, durationSec, optional spawnAtStart for boss. Pure `encounterPacing.ts` (DEFAULT_SCHEDULE = `[travel, swarm, travel, mini-boss, travel, boss]` cycle, slotAt with negative-safe wrap, pacingBreakdown for share calc). `EncounterSystem.ts` cycles schedule, mutates EnemySpawner.{spawnIntervalSeconds, pool} per template, triggers boss via `spawnAtStart`, subscribe/notify pattern. RunScene wires HUD text ("Travel — 30s") at top center, updates from encounter subscribe. Encounter advances on **scaled dt** so slow-time also slows encounter pacing (per DESIGN spirit). **Caught in flight:** property name mismatch — EnemySpawner has `spawnIntervalSeconds` but I assigned `spawnIntervalSec`; TS caught immediately. **194/194 unit pass** (+11 encounterPacing), **3/3 E2E pass**. | 194 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.6: 5 enemies + boss.** enemies.json expanded from 1→6: scout (existing) + bruiser (slow tank, 40 HP), runner (fast glass cannon, 5 HP, 160 px/sec), shooter (ranged behavior tag), suicide-bomber (red sphere with fuse), Veil Hauler boss (3-phase, 400 HP, 36 radius). types.ts: EnemyData gains `behavior?: EnemyBehaviorKind`, `isBoss?`, `phases?: BossPhaseSpec[]`. Pure helpers: `bossPhases.ts` (currentPhaseIndex/currentPhase by HP ratio, sorted high-to-low) + `enemyPool.ts` (weighted pickFromPool with deterministic-rng tests). EnemySpawner picks from defaultEnemyPool() (equal-weight non-boss); boss spawning deferred to Phase 4.7 encounter grammar. v0: all enemies use tracker movement (move toward train). Ranged/suicide-specific behaviors stubbed in JSON tag; Phase 4.X+ wires car damage and the bomber explodes / shooter fires back. **Caught in flight:** my first import-edit pattern didn't match — fixed via re-Read + targeted Edit. **183/183 unit pass** (+12: bossPhases 6 + enemyPool 6), **3/3 E2E pass**. Visual confirms suicide-bomber + others spawning. | 183 unit ✅ · 3 E2E ✅ |
 | 2026-05-05 | claude (PM) | main | **Phase 4 Task 4.5: Slow-time pause.** Pure `slowTimeMath.ts` (NORMAL/SLOW constants, timeScaleFor, lerpAlpha) + `SlowTimeSystem.ts` (Phaser keyboard listener on SPACE, blue-tint full-screen overlay graphic that lerps in/out 0.18 alpha). RunScene.update() splits dt: gameplay systems get `realDt × timeScale` (Bastion-style 25% during slow); SaveSystem.update gets real dt (auto-save shouldn't lag at 30s wall-clock when paused). Visual: `0x4070b0` overlay fades in over ~5 frames when SPACE down. **171/171 unit pass** (+10 slowTimeMath), **3/3 E2E pass**, TS strict. | 171 unit ✅ · 3 E2E ✅ |
@@ -41,10 +43,14 @@
 | 2026-05-05 | human + claude | main | Phase 1 docs (CLAUDE.md with audit-discipline section, DESIGN.md, PROGRESS.md, REVIEW_NOTES.md, README.md) | n/a |
 | 2026-05-05 | human + claude | main | Phase 0 scaffold (Vite + TS + Phaser ^3.90 + zustand + localforage + vitest + Playwright). MCP playwright wired. Repo pushed to https://github.com/josh-max2/THELINE. **Divergence:** Pinned Phaser to ^3.90 instead of latest 4.x because the build plan assumes v3 idioms. | n/a |
 
-## Next priorities (queue, ordered) — Phase 4 in progress
+## Next priorities (queue, ordered) — Phase 5 in progress
 
-1. **READY** — Phase 4 Task 4.8: Environmental effects matrix v1 per DESIGN §8. ADR design first, then implementation. 5×5 weapon×terrain matrix; lingering effects (fire patches, ice slows, electric chains). Effects damage enemies passing through. biomes.json + environment-matrix.json + EnvironmentSystem. Per build plan, this gets a planning ADR before code.
-2. **(continues per build plan — Tasks 4.9 hub, 4.10 save v2)**
+1. **READY** — Phase 5 Task 5.3: Tech tree v0. Persistent meta-progression unlock graph spend Salvage. Hub Tech Tree card → tree UI; data-driven nodes; persists across runs via SaveSystem v2 runState extension.
+2. **NEXT** — Phase 5 Task 5.4: Build sharing via URL (encode loadout to ?b=…).
+3. **NEXT** — Phase 5 Task 5.5: Visual polish (particles, hit feedback, screen shake).
+4. **NEXT** — Phase 5 Task 5.6: Audio (sfx + music via Web Audio).
+5. **NEXT** — Phase 5 Task 5.7: Tutorial overlay.
+6. **NEXT** — Phase 5 Task 5.8: Idle income + auto-run.
 
 ## Open questions for human (Josh)
 
@@ -80,6 +86,7 @@
 - `docs/screenshots/2026-05-05-task3.5-combat-30s.png` — Audit screenshot, 30s combat session: salvage = 19 (linear scaling, ~0.63 kills/sec, matches 1.5s spawn interval).
 - `docs/screenshots/2026-05-05-phase3-close-audit.png` — Phase 3 closeout 30s combat audit: salvage = 19 (deterministic match to Task 3.5 baseline).
 - `docs/screenshots/2026-05-05-task4.1-five-cars.png` — Full default v1 train rendered: Engine (slate + cannon) → Weapon (gray + 3 mount stubs) → Armor (rust + plating + rivets) → Crew (green + portholes) → Cargo (brown + open-top crate). HUD shows `Train: 5/8`.
+- `docs/screenshots/task5-2-env-zones.png` — Phase 5 Task 5.2: Run scene mid-Travel encounter at 18s, 8 turrets attached, support-aura visible around Armor Car, Power panel shows Weapon car at 63% efficiency, Salvage = 7. Confirms RunScene reorder (env binding before attach) renders cleanly post-Task-5.2.
 
 ## Audit log
 

@@ -17,7 +17,9 @@ import type { CombatSystem } from '../systems/CombatSystem';
 import type { ItemAttachmentSystem } from '../systems/ItemAttachmentSystem';
 import type { PowerSystem } from '../systems/PowerSystem';
 import type { CrewSystem } from '../systems/CrewSystem';
+import type { EnvironmentSystem } from '../systems/EnvironmentSystem';
 import { composeStats, getNumStat, getStrStat, type EffectiveStats } from './composeStats';
+import { categoryToDamageType } from './zoneMath';
 
 /** Per-frame context passed to every active behavior. */
 export interface BehaviorContext {
@@ -27,6 +29,7 @@ export interface BehaviorContext {
   items: ItemAttachmentSystem;
   power: PowerSystem;
   crew: CrewSystem;
+  environment: EnvironmentSystem;
 }
 
 /** A live attachment as the registry sees it. */
@@ -231,6 +234,12 @@ const aoePulseHandler: BehaviorHandler = {
     if (!target) return;
 
     ctx.combat.firePulse(target.x, target.y, radius, damage, parseHexColor(colorHex));
+    // Per Task 5.2: also spawn an environmental damage zone if the turret's
+    // category maps to a weapon damage axis (kinetic/fire/cryo/explosive/electric).
+    const dmgType = categoryToDamageType(handle.data.category);
+    if (dmgType) {
+      ctx.environment.spawnZone(target.x, target.y, dmgType);
+    }
     s.cooldownSeconds = 1 / fireRate;
   },
 };
