@@ -1,4 +1,4 @@
-// Pure helpers for screen-shake tuning. Per Task 5.5.
+// Pure helpers for screen-shake tuning. Per Task 5.5 + Phase 6 juice pass.
 //
 // Phaser's camera.shake(durationMs, intensity) handles the actual transform.
 // We just decide *which* tier a given event uses so the magic numbers live
@@ -10,12 +10,16 @@ export interface ShakePreset {
   intensity: number;
 }
 
+// Phase 6 juice bump: roughly +60-70% on kill/explosion/boss tiers, plus a
+// new `impact` tier so non-fatal projectile hits get a tactile bump. `hit`
+// stays at 0 so flash-only events (beam tick) don't shake every frame.
 export const SHAKE_PRESETS = {
-  hit: { durationMs: 0, intensity: 0 } satisfies ShakePreset, // hit flashes don't shake
-  smallKill: { durationMs: 80, intensity: 0.0025 } satisfies ShakePreset,
-  bigKill: { durationMs: 140, intensity: 0.005 } satisfies ShakePreset,
-  explosion: { durationMs: 220, intensity: 0.008 } satisfies ShakePreset,
-  bossKill: { durationMs: 420, intensity: 0.014 } satisfies ShakePreset,
+  hit: { durationMs: 0, intensity: 0 } satisfies ShakePreset,
+  impact: { durationMs: 60, intensity: 0.0015 } satisfies ShakePreset,
+  smallKill: { durationMs: 100, intensity: 0.004 } satisfies ShakePreset,
+  bigKill: { durationMs: 180, intensity: 0.0085 } satisfies ShakePreset,
+  explosion: { durationMs: 280, intensity: 0.013 } satisfies ShakePreset,
+  bossKill: { durationMs: 500, intensity: 0.022 } satisfies ShakePreset,
 } as const;
 
 export type ShakeTier = keyof typeof SHAKE_PRESETS;

@@ -159,8 +159,11 @@ const autoFireHandler: BehaviorHandler = {
     const stats = effectiveStats(handle, ctx);
     const fireRate = getNumStat(stats, 'fireRate', 1.0);
     const damage = getNumStat(stats, 'damage', 1);
+    // Derive damage type from category for impact-spark color matching
+    // (Phase 6 juice). Falls back to kinetic when category is non-elemental.
+    const dmgType = categoryToDamageType(handle.data.category) ?? 'kinetic';
 
-    const fired = ctx.combat.fireFrom(pos.x, pos.y, damage);
+    const fired = ctx.combat.fireFrom(pos.x, pos.y, damage, dmgType);
     if (fired) s.cooldownSeconds = 1 / fireRate;
     // If no target in range, leave cooldown at 0 so we'll fire as soon as one appears.
   },
@@ -244,10 +247,17 @@ const aoePulseHandler: BehaviorHandler = {
     const target = ctx.combat.findClosestEnemy(pos.x, pos.y, range);
     if (!target) return;
 
-    ctx.combat.firePulse(target.x, target.y, radius, damage, parseHexColor(colorHex));
     // Per Task 5.2: also spawn an environmental damage zone if the turret's
     // category maps to a weapon damage axis (kinetic/fire/cryo/explosive/electric).
     const dmgType = categoryToDamageType(handle.data.category);
+    ctx.combat.firePulse(
+      target.x,
+      target.y,
+      radius,
+      damage,
+      parseHexColor(colorHex),
+      dmgType ?? 'explosive',
+    );
     if (dmgType) {
       ctx.environment.spawnZone(target.x, target.y, dmgType);
     }
@@ -292,13 +302,18 @@ const supportAuraHandler: BehaviorHandler = {
       s.auraGraphics = ctx.scene.add.graphics();
       s.auraGraphics.setDepth(20);
     }
-    const alpha = 0.12 + 0.08 * Math.sin(s.pulsePhase * Math.PI);
+    // Phase 6 juice: aura was a giant translucent disc that swallowed the
+    // frame. Replaced with a thin pulsing ring + faint dashed inner ring so
+    // the player can read its range without the visual dominating combat.
+    const pulse = 0.5 + 0.5 * Math.sin(s.pulsePhase * Math.PI);
     const color = parseHexColor(colorHex);
     s.auraGraphics.clear();
-    s.auraGraphics.lineStyle(1, color, alpha + 0.15);
+    // Outer ring — pulses in alpha.
+    s.auraGraphics.lineStyle(1.5, color, 0.25 + pulse * 0.2);
     s.auraGraphics.strokeCircle(pos.x, pos.y, range);
-    s.auraGraphics.fillStyle(color, alpha * 0.3);
-    s.auraGraphics.fillCircle(pos.x, pos.y, range);
+    // Inner ring — softer, just hints at the area.
+    s.auraGraphics.lineStyle(1, color, 0.08 + pulse * 0.06);
+    s.auraGraphics.strokeCircle(pos.x, pos.y, range * 0.7);
   },
   destroy(handle) {
     const s = handle.state['support-aura'] as AuraState | undefined;

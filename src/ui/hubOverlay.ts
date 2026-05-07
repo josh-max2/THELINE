@@ -10,7 +10,7 @@ import { audioStore } from '../lib/audioStore';
 import { unlocksStore } from '../lib/unlocksStore';
 import { autoRunStore } from '../lib/autoRunStore';
 
-const PLACEHOLDER_NOTE = 'Phase 5 polish';
+const PLACEHOLDER_NOTE = 'Coming soon';
 
 export interface HubOverlayDeps {
   techTree?: TechTreeSystem;
@@ -49,11 +49,27 @@ export class HubOverlay {
 
     const header = document.createElement('div');
     header.className = 'hub-header';
+    const titleWrap = document.createElement('div');
+    titleWrap.className = 'hub-title-wrap';
     const title = document.createElement('span');
-    title.textContent = 'HUB';
+    title.className = 'hub-title';
+    title.textContent = 'THE LINE';
+    const subtitle = document.createElement('span');
+    subtitle.className = 'hub-subtitle';
+    subtitle.textContent = 'Removal Service · Outpost';
+    titleWrap.appendChild(title);
+    titleWrap.appendChild(subtitle);
+
+    const salvageWrap = document.createElement('div');
+    salvageWrap.className = 'hub-salvage-wrap';
+    const salvageLabel = document.createElement('span');
+    salvageLabel.className = 'hub-salvage-label';
+    salvageLabel.textContent = 'SALVAGE';
     this.salvageEl = document.createElement('span');
     this.salvageEl.className = 'hub-salvage';
-    this.salvageEl.textContent = `Salvage: ${salvageTotal}`;
+    this.salvageEl.textContent = `${salvageTotal}`;
+    salvageWrap.appendChild(salvageLabel);
+    salvageWrap.appendChild(this.salvageEl);
 
     // Mute toggle (Task 5.6) — sits in the header next to the salvage readout.
     const muteBtn = document.createElement('button');
@@ -69,14 +85,14 @@ export class HubOverlay {
     });
     this.unsubAudio = audioStore.subscribe(renderMuteLabel);
 
-    header.appendChild(title);
+    header.appendChild(titleWrap);
     header.appendChild(muteBtn);
-    header.appendChild(this.salvageEl);
+    header.appendChild(salvageWrap);
     this.root.appendChild(header);
 
     // Keep header live during the hub session — purchases debit immediately.
     this.unsubSalvage = salvageStore.subscribe((total) => {
-      this.salvageEl.textContent = `Salvage: ${total}`;
+      this.salvageEl.textContent = `${total}`;
     });
 
     // Auto-run toggle (Task 5.8) — only rendered if Eternal Engine is owned.
@@ -101,7 +117,9 @@ export class HubOverlay {
     });
     this.unsubAutoRun = autoRunStore.subscribe(renderAutoRunLabel);
     this.unsubUnlocks = unlocksStore.subscribe(renderAutoRunVisibility);
-    header.insertBefore(this.autoRunBtn, this.salvageEl);
+    // salvageWrap (not salvageEl) is the direct child of header now —
+    // insertBefore needs a true sibling reference.
+    header.insertBefore(this.autoRunBtn, salvageWrap);
 
     // Import-from-URL banner (Task 5.4) — shown when ?b=… is present.
     if (deps.importToken) {
@@ -112,35 +130,68 @@ export class HubOverlay {
     const grid = document.createElement('div');
     grid.className = 'hub-grid';
 
-    grid.appendChild(this.makePanel('Engineering Bay', PLACEHOLDER_NOTE, 'Install/swap turrets, configure car loadouts.'));
-    grid.appendChild(this.makePanel('Crew Roster', PLACEHOLDER_NOTE, 'Recruit crew, assign specialties.'));
+    grid.appendChild(
+      this.makePanel(
+        'Engineering Bay',
+        '⚒',
+        PLACEHOLDER_NOTE,
+        'The fitter\'s shed. Swap turrets, slot items, dial in the loadout.',
+      ),
+    );
+    grid.appendChild(
+      this.makePanel(
+        'Crew Roster',
+        '⬢',
+        PLACEHOLDER_NOTE,
+        'Names, specialties, scars. Where the crew sits between Lines.',
+      ),
+    );
 
     // Tech Tree — functional in v0 if a system was injected; placeholder otherwise.
     if (deps.techTree) {
       grid.appendChild(this.makeTechTreeCard(deps.techTree));
     } else {
-      grid.appendChild(this.makePanel('Tech Tree', PLACEHOLDER_NOTE, 'Spend Salvage on permanent unlocks.'));
+      grid.appendChild(
+        this.makePanel(
+          'Tech Tree',
+          '⚛',
+          PLACEHOLDER_NOTE,
+          'Spend Salvage on permanent unlocks.',
+        ),
+      );
     }
 
     // Mission Board — the one functional panel.
     const mission = document.createElement('div');
     mission.className = 'hub-panel hub-mission';
-    const missionTitle = document.createElement('h3');
-    missionTitle.textContent = 'Mission Board';
-    mission.appendChild(missionTitle);
+    const missionHeader = this.makePanelHeader('Mission Board', '▶');
+    mission.appendChild(missionHeader);
+
+    const missionMeta = document.createElement('span');
+    missionMeta.className = 'hub-card-meta hub-card-meta-active';
+    missionMeta.textContent = 'TEST LINE · READY';
+    mission.appendChild(missionMeta);
 
     const missionDesc = document.createElement('p');
-    missionDesc.textContent = 'Test Line — cycles through travel/swarm/mini-boss/boss encounters.';
+    missionDesc.textContent =
+      'Travel → Swarm → Travel → Mini-boss → Travel → Boss. Standard sweep.';
     mission.appendChild(missionDesc);
 
     const departBtn = document.createElement('button');
     departBtn.className = 'hub-depart';
-    departBtn.textContent = 'DEPART';
+    departBtn.textContent = '▶  DEPART';
     departBtn.addEventListener('click', onDepart);
     mission.appendChild(departBtn);
     grid.appendChild(mission);
 
-    grid.appendChild(this.makePanel('Lore Log', PLACEHOLDER_NOTE, 'Veil fragments accumulate.'));
+    grid.appendChild(
+      this.makePanel(
+        'Lore Log',
+        '◈',
+        PLACEHOLDER_NOTE,
+        'Veil fragments. Field journals. The things the crew won\'t talk about.',
+      ),
+    );
 
     this.root.appendChild(grid);
     parent.appendChild(this.root);
@@ -190,31 +241,50 @@ export class HubOverlay {
   private makeTechTreeCard(system: TechTreeSystem): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'hub-panel hub-techtree';
-    const h = document.createElement('h3');
-    h.textContent = 'Tech Tree';
-    panel.appendChild(h);
+    panel.appendChild(this.makePanelHeader('Tech Tree', '⚛'));
 
-    const owned = system.ownedIds.size;
+    const meta = document.createElement('span');
+    meta.className = 'hub-card-meta hub-card-meta-active';
+    const renderMeta = (n: number): void => {
+      meta.textContent = `${n} UNLOCK${n === 1 ? '' : 'S'} OWNED`;
+    };
+    renderMeta(system.ownedIds.size);
+    panel.appendChild(meta);
+
     const summary = document.createElement('p');
-    summary.textContent = `${owned} unlock${owned === 1 ? '' : 's'} purchased — click to spend Salvage.`;
+    summary.textContent = 'Spend Salvage on permanent unlocks across runs.';
     panel.appendChild(summary);
+
+    const cta = document.createElement('span');
+    cta.className = 'hub-card-cta';
+    cta.textContent = 'OPEN ▸';
+    panel.appendChild(cta);
 
     panel.addEventListener('click', () => {
       if (this.techPanel) return;
       this.techPanel = new TechTreePanel(document.body, system, () => {
         this.techPanel = undefined;
-        // Update the summary line after close in case purchases happened.
-        const updated = system.ownedIds.size;
-        summary.textContent = `${updated} unlock${updated === 1 ? '' : 's'} purchased — click to spend Salvage.`;
+        renderMeta(system.ownedIds.size);
       });
     });
 
     // Keep the count live during hub session via system subscribe.
-    system.subscribe((set) => {
-      const n = set.size;
-      summary.textContent = `${n} unlock${n === 1 ? '' : 's'} purchased — click to spend Salvage.`;
-    });
+    system.subscribe((set) => renderMeta(set.size));
     return panel;
+  }
+
+  /** Card header: icon + title in a single row. */
+  private makePanelHeader(title: string, icon: string): HTMLDivElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'hub-card-header';
+    const ico = document.createElement('span');
+    ico.className = 'hub-card-icon';
+    ico.textContent = icon;
+    const h = document.createElement('h3');
+    h.textContent = title;
+    wrap.appendChild(ico);
+    wrap.appendChild(h);
+    return wrap;
   }
 
   /**
@@ -261,15 +331,13 @@ export class HubOverlay {
     return banner;
   }
 
-  private makePanel(title: string, badge: string, body: string): HTMLDivElement {
+  private makePanel(title: string, icon: string, badge: string, body: string): HTMLDivElement {
     const panel = document.createElement('div');
-    panel.className = 'hub-panel';
-    const h = document.createElement('h3');
-    h.textContent = title;
-    panel.appendChild(h);
+    panel.className = 'hub-panel hub-panel-soon';
+    panel.appendChild(this.makePanelHeader(title, icon));
     const tag = document.createElement('span');
-    tag.className = 'hub-badge';
-    tag.textContent = badge;
+    tag.className = 'hub-card-meta';
+    tag.textContent = badge.toUpperCase();
     panel.appendChild(tag);
     const p = document.createElement('p');
     p.textContent = body;
