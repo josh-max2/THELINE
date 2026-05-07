@@ -90,15 +90,38 @@ Vampire Survivors enemy density. Auto-fire. Player configures targeting prioriti
 - Bullet-hell visual density with particles, beams, projectile clouds.
 - Snowball pacing: minute 1 sparse, minute 15 chaos, minute 25 screen-clearing fireworks.
 
-## 7. Skill layer
+## 7. Skill layer (FTL-aligned, per 2026-05-06 design pivot)
 
-The differentiator from pure idle:
+The differentiator from pure idle. Direct FTL inspiration: real systems
+the player allocates against in real-time, plus a crew layer that
+sits on top.
 
-- **Power distribution** (real-time). Engine generates X power/sec. Allocate between weapon cars, shields, repair drones, sensors.
-- **Crew slot assignment** (4 slots, no avatars). Drag-drop between cars. Crew on weapon car: +50% fire rate. Crew on damaged car: passive repair. Crew can't die in v1.
-- **Slow-time pause.** Hold spacebar → time scale 0.25. NOT a full pause. Bastion-style.
-- **Active ability cooldowns.** Trigger emergency shields, EMP pulse, etc. on cooldown.
-- **Reactive event choices.** Rival train approaching? Storm ahead? Cargo damaged?
+- **Power distribution — FTL-style integer bars.** Engine ("Reactor") has
+  a power ceiling (start 5 bars, upgradeable to 25). Each system (weapon
+  car, shields, engines, sensors, doors) consumes integer bars. Player
+  clicks +/- buttons (or arrow keys when system focused) to allocate.
+  Damaged systems lose their top bars until repaired. Power distribution
+  is the moment-to-moment skill expression. **(Replaces the v0 continuous
+  slider UI.)**
+- **Crew — FTL-style stations.** Crew start with 4 named members; recruit
+  more via Hub. Each crew member can be assigned to ANY car/station.
+  Stations grant per-tick XP gains in a station-specific skill — Pilot
+  (Engine), Gunner (Weapon), Engineer (Engine, repair speed),
+  Shield (Armor), Repair (any car under fire). Skills cap at level 3
+  in v1. Higher skill = bigger bonus to that station's effect.
+  **Crew can be wounded but not die in v1**; wounded crew operate at 50%
+  effectiveness until healed. Death lands in v2 alongside hull breaches.
+- **Crew assignment — drag and drop.** Crew tokens render on the car
+  they're staffing. Click + drag to a different car. Reassignment takes
+  ~1.5s of "moving" with no station bonus during transit (FTL-style
+  movement penalty).
+- **Slow-time pause.** Hold spacebar → time scale 0.25. NOT a full
+  pause. Bastion-style. Useful for crew reassignment + power
+  reallocation under pressure.
+- **Active ability cooldowns.** Trigger emergency shields, EMP pulse,
+  cloak, etc. on cooldown. v1 ships with 3 abilities; v2 expands.
+- **Reactive event choices.** Rival train approaching? Storm ahead?
+  Cargo damaged? FTL-style multi-choice events between encounters.
 
 ## 8. Environmental matrix (5×5 in v1)
 
@@ -130,19 +153,52 @@ The differentiator from pure idle:
 | Mini-boss | ~15% | 2–4 elite enemies, demands target prioritization |
 | Boss | ~10% (1–2/run) | Named threat, FTL-style phases, demands power management |
 
-## 10. Roguelike + Hub
+## 10. Roguelike + Hub (FTL-style upgrade flow)
 
-**Run** = 15–25 min. 3–5 chained biomes (procedural). Random enemy compositions. 1–2 boss encounters. Death = lose run rewards, keep meta-progression.
+**Run** = 15–25 min. 3–5 chained biomes (procedural). Random enemy
+compositions. 1–2 boss encounters. Death = lose run rewards, keep
+meta-progression.
 
-**The Hub** (between runs):
-- **Engineering Bay** — install/swap turrets, configure car-slot loadouts, save blueprints
-- **Item Stash** *(post-run only)* — items found this run pile up in the run's stash visible on the train; on death, items are lost and only Salvage carries over
-- **Crew Roster** — recruit new crew, see specialty stats
-- **Tech Tree** — spend Salvage (meta currency) on permanent unlocks: new turret types, new items in the loot pool, more car/turret slots, higher item-stack caps
-- **Mission Board** — pick which Line to run next
-- **Lore Log** — Veil fragments accumulate
-- **Idle income** — passive Salvage based on highest completed run
-- **Auto-run mode** — set train to auto-repeat completed lines while away
+**Starting loadout (FTL-style stripped opener):**
+
+The player begins with the minimum viable train:
+
+- 1× Engine (5 power bars max), 1× Weapon Car (1 turret slot)
+- 1× basic-cannon turret pre-mounted, 0 items
+- 4 unleveled crew (Pilot, Gunner, Engineer, generalist) — all level 0
+- 0 Salvage in Hub, 0 tech-tree purchases
+
+**Run-time upgrades** (within a single run, FTL-style "store" stops between
+encounters):
+
+- Buy turrets, items, crew, repair, ammo — all costs scale per biome
+- Place purchases manually onto open car slots (Engineering Bay flow)
+- Wounded crew heal between encounters at 1 hp/sec
+
+**Meta-progression** (Hub, between runs):
+
+- **Engineering Bay** — install/swap turrets, configure car-slot
+  loadouts, save blueprints. **In-run purchases also flow through this
+  UX** so the player learns the same flow.
+- **Item Stash** *(post-run only)* — items found this run pile up in
+  the run's stash visible on the train; on death, items are lost and
+  only Salvage carries over.
+- **Crew Roster** — recruit new crew, see XP + specialty stats.
+- **Tech Tree** — spend Salvage (meta currency) on permanent unlocks:
+  more cars, more turret slots, new turret categories (cryo, fire,
+  explosive, electric), item drops, +10% global damage, idle income,
+  auto-run, etc. **This is the main progression spine** — without
+  Tech Tree purchases, the player is stuck with the basic-cannon
+  starting loadout forever.
+- **Reactor Upgrades** — hub-purchased increments to max power bars
+  (1 per upgrade, capped at 25 in v1).
+- **Hull Upgrades** — hub-purchased train HP, shield charge rate,
+  repair speed.
+- **Mission Board** — pick which Line to run next.
+- **Lore Log** — Veil fragments accumulate.
+- **Idle income** — passive Salvage based on highest completed run.
+- **Auto-run mode** — set train to auto-repeat completed lines while
+  away (Eternal Engine tech required).
 
 ## 11. Prestige
 
@@ -157,9 +213,13 @@ Every ~10 runs, completing a "Charter" (multi-run journey across a region) grant
 
 - NOT real-time competitive multiplayer.
 - NOT narrative-driven (lore is fragmentary).
-- NOT pixel art (v1).
 - NOT mobile-first (browser desktop, mobile is bonus).
-- NOT a deckbuilder, NOT a tower defense in the strict sense, NOT auto-battler in the team-comp sense.
+- NOT a deckbuilder, NOT a tower defense in the strict sense, NOT
+  auto-battler in the team-comp sense.
+
+(Removed the "NOT pixel art" line per the 2026-05-06 design pivot.
+v0 ships vector; v1.x patch may incorporate sprites/illustrated assets
+from CC0 packs (Kenney.nl etc.) once gameplay validates the loop.)
 
 ## 14. Open questions
 
@@ -175,18 +235,69 @@ Every ~10 runs, completing a "Charter" (multi-run journey across a region) grant
 
 ## 15. Pinned decisions
 
-- **Genre framing:** Active management roguelike with incremental progression. NOT pure idle.
-- **Pause:** Slow-time (Bastion-style), not full pause. Hold spacebar → 25% time.
-- **Crew:** Slot-based (4 slots), no individual avatars or pathing in v1.
-- **Train topology v1:** Ordered array. Engine leftmost & immovable. Single Engine. Cargo defaults rightmost. v2 may relax. (See ADR-001.)
-- **Module model:** Two kinds — Turrets (slot-attached, fire) and Items (stack on turrets, modify traits). BoI-style item stacking. v1 ~10 turrets + ~20 items, item-stack cap 3. (See ADR-002.)
-- **Enemy spawn directions:** All directions EXCEPT forward (+x). Train is being chased; spawn at rear/top/bottom only in v1. (See ADR-001 §Gap 2 + amendment, ADR-002.)
-- **Visual:** Vector-geometric. Commit. No pixel art for v1.
-- **Save schema:** Versioned from commit one. Migrations sacred.
+- **Genre framing:** Active management roguelike with incremental
+  progression. NOT pure idle. **FTL-aligned skill layer + start-stripped
+  upgrade-driven progression** (per 2026-05-06 design pivot).
+- **Pause:** Slow-time (Bastion-style), not full pause. Hold spacebar
+  → 25% time.
+- **Crew:** Drag-and-drop between cars (FTL-style). Per-station XP +
+  Pilot/Gunner/Engineer/Shield/Repair specialties, cap level 3 in v1.
+  Wounded reduces effectiveness 50%; **crew don't die in v1** (death
+  lands in v2 with hull breaches).
+- **Power UI:** Integer bars per system (FTL-style click +/-). Reactor
+  starts at 5, hub-upgradeable to 25. Damaged systems lose top bars.
+  **(Replaces the v0 continuous-slider PowerPanel.)**
+- **Starting loadout:** Stripped — 1 Engine + 1 Weapon Car + 1
+  basic-cannon + 4 level-0 crew. All other turrets/cars/categories/items
+  unlock via Tech Tree purchases. Players who haven't earned upgrades
+  fight with the basics.
+- **Train topology v1:** Ordered array. Engine leftmost & immovable.
+  Single Engine. Cargo defaults rightmost. v2 may relax. (See ADR-001.)
+- **Module model:** Two kinds — Turrets (slot-attached, fire) and Items
+  (stack on turrets, modify traits). BoI-style item stacking.
+  **v1 ships 30 turrets + ~20 items**, item-stack cap 3. (See ADR-002.)
+- **Enemy spawn directions:** All directions EXCEPT forward (+x). Train
+  is being chased. (See ADR-001 §Gap 2 + amendment, ADR-002.)
+- **Visual:** Vector-geometric in v0 (commit, ship); v1.x patch may
+  incorporate sprites/illustrated assets from CC0 packs (Kenney.nl etc.)
+  once playtest feedback validates the gameplay loop.
+- **Save schema:** Versioned from commit one. Migrations sacred. Currently v5.
 - **Determinism:** Every run seeded via `?seed=<n>` URL param.
 - **Module data:** JSON, not code. Adding a module is adding a row.
-- **Launch surface:** itch.io + r/incremental_games (with secondary on r/IndieDev, r/Vampire_Survivors, r/ftlgame).
+- **Launch surface:** itch.io + r/incremental_games (with secondary on
+  r/IndieDev, r/Vampire_Survivors, r/ftlgame).
 - **v1 monetization:** None. Build the audience first.
 - **v2 monetization:** Premium Steam at $5–7.
 
 These can change — but only via human decision, not agent drift.
+
+---
+
+## 16. Design pivot log (2026-05-06)
+
+After Phase 5 closeout the player tested the build and surfaced a
+fundamental gap: **the gameplay loop is mechanically sound but visually
+and economically too generous**. v0 hands the player a fully-loaded
+8-turret train at run start, which collapses the entire progression
+hook (no climb from "starter" to "endgame"). The FTL inspiration in §1
+was always there but had drifted out of the v0 implementation.
+
+This pivot re-aligns the implementation with the genre framing:
+
+1. **Strip the starting loadout** so the climb is real. New runs begin
+   with 1 turret, 5 power bars, 4 unleveled crew, 0 tech.
+2. **FTL-ify the power UI** — integer bars, click +/- to allocate,
+   damaged systems lose top bars. The continuous slider was UX-fast
+   but didn't read as a "system" the player wields.
+3. **FTL-ify crew** — drag/drop between cars, per-station XP,
+   specialties (Pilot/Gunner/Engineer/Shield/Repair). Crew don't die
+   in v1 but they wound and operate degraded.
+4. **In-run upgrade stops** — between encounters, FTL-style "store"
+   nodes let the player buy turrets, items, crew, repair using
+   in-run salvage. Engineering Bay UX is reused (placement flow).
+5. **Visual pass deferred to v1.x** — gameplay refinement first, then
+   curated CC0 sprite packs (Kenney.nl, OpenGameArt.org) wired into
+   `drawRecipe`. Vector v0 ships first; sprites are a post-launch patch
+   if traction warrants the asset work.
+
+Rolling Phase 6 backlog reflects this — see PROGRESS.md "Next priorities".

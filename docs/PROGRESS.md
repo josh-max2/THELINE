@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-> Last updated: 2026-05-06 by claude (Phase 5 COMPLETE; Phase 6.1 audit + balance pass shipped)
+> Last updated: 2026-05-06 by claude + josh (DESIGN PIVOT — FTL-ify crew + power + start-stripped progression; visual pass deferred to v1.x)
 > Build phase: 5 (content + polish) — in progress
 > v1 ETA: 2026-07-15
 
@@ -12,12 +12,13 @@
 - Phase 3 vertical slice: ✅ (Tasks 3.1–3.7 done; audit clean — 0 BLOCKER, 0 NEEDS-CHANGE, 16 NIT deferred)
 - Phase 4 core systems: ✅ (Tasks 4.1–4.10 done; reviewer pass logged)
 - Phase 5 content + polish: ✅ (all 8 tasks done — 372 unit + 3 E2E pass; save schema v5)
-- Phase 6 launch prep: 🚧 (6.1 QA + balance audit ✅; 6.2 itch.io page next)
+- Phase 6 launch prep: 🚧 (6.1 QA + balance audit ✅; pivot logged 2026-05-06; 6.2 FTL power UI next)
 
 ## Recent activity (last 10 sessions)
 
 | Date | Agent | Branch | Summary | Tests |
 |---|---|---|---|---|
+| 2026-05-06 | human (Josh) + claude | main | **DESIGN PIVOT — FTL-ification + start-stripped upgrades.** Player tested the v0 build post-Phase-5 and surfaced that the loop is mechanically sound but visually/economically too generous: starting train ships fully loaded with 8 turrets which collapses the progression hook. Pivot direction: (1) **Strip starting loadout** to 1 Engine + 1 Weapon Car + 1 basic-cannon + 4 level-0 crew + 5 power bars; everything else is Tech-Tree-gated. (2) **FTL-ify power UI** — replace continuous PowerPanel sliders with integer bars + click +/- buttons + damaged-system top-bar lockout. (3) **FTL-ify crew** — drag/drop tokens between cars, per-station XP, Pilot/Gunner/Engineer/Shield/Repair specialties capped at level 3 in v1, wounded crew operate at 50% (no death in v1; that's still v2). (4) **In-run upgrade stops** — FTL-style store nodes between encounters; player buys turrets/items/crew/repair with in-run salvage; Engineering Bay UX reused. (5) **Visual pass deferred to v1.x** — gameplay first, then curated CC0 sprite packs (Kenney.nl, OpenGameArt) wired into drawRecipe; vector v0 ships first. **Updates landed:** DESIGN.md §7 (skill layer rewritten, FTL-aligned), §10 (starting loadout + Hub upgrade flow detailed), §13 (removed "NOT pixel art" anti-goal), §15 (pinned decisions updated for crew/power/visual/starting-loadout), new §16 (design pivot log). PROGRESS.md "Next priorities" reshuffled — old 6.2 (itch.io page) deferred, new 6.2 (FTL power UI rework), 6.3 (FTL crew rework), 6.4 (strip starting loadout + run-store), 6.5 (visual pass via CC0 packs). | n/a (design only) |
 | 2026-05-06 | claude (PM) | main | **Phase 6 Task 6.1: QA + balance audit.** Full line-by-line audit of Phase 5 work (77 files / 4970 LOC inserted). Pass 1 automated: TS strict ✅, production build ✅ (1.3MB / 350KB gzipped), 372 unit ✅, 3 E2E ✅. Pass 2 file-read: 11 new lib helpers, 4 new systems, 2 new UI panels, all clean. Pass 3 live runtime: navigated Hub→TechTree→Run→combat→Hub via Playwright, captured 0 console errors (excluding harmless WebGL ReadPixels perf hints from `preserveDrawingBuffer`). Then static balance pass across all 30 modules — DPS = damage×fireRate (auto-fire/aoe-pulse), damagePerSecond (beam), 0 (support-aura). **Found 1 broken module:** `emp-pulse` had `damage: 0` — aoe-pulse handler fires the visual + env zone but applies zero damage to enemies. Intent appears to be a stun mechanic that doesn't exist in v0 handlers. **Fixed by setting damage:4, fireRate:0.4** (low-grade electric pulse pending true stun mechanic post-v1). **Found 1 latent test gap:** `modulesData.test.ts > every module references a registered behavior kind` allowed all 7 BehaviorKind enum values, but only 4 (`auto-fire`, `beam`, `aoe-pulse`, `support-aura`) have registered handlers. A future module accidentally using `kind: 'shield'` would pass the test but crash at runtime. Tightened to read the registry directly (`moduleBehaviors.has(...)`). New `docs/BALANCE_AUDIT.md` with the per-module table + flagged outliers (point-defense misclassification, demo-charge inefficient, lightning dominance to watch in playtests). **372 unit pass** (no count change — same coverage), **3/3 E2E pass**, TS strict. | 372 unit ✅ · 3 E2E ✅ |
 | 2026-05-06 | claude (PM) | main | **Phase 5 Task 5.8: Idle income + auto-run (CLOSES PHASE 5).** Pure `idleIncomeMath.ts` — `IDLE_RATE_PER_SEC = 1/60` (1 salvage/min), `IDLE_CAP_SEC = 4h`, `IDLE_CAP_SALVAGE = 240`; `accruedSalvage(lastExitMs, nowMs)` floor-rounds with cap + defensive zero on NaN/clock-skew/never-exited. New `autoRunStore.ts` singleton (mirrors salvageStore/unlocksStore/loadoutStore/audioStore) — boolean enabled with subscribe/notify, idempotent setter. **Save schema bumped v4 → v5** with `lastHubExitMs: number` + `autoRunEnabled: boolean` on HubState; v4→v5 migration preserves all v4 fields (incl. audio prefs) and seeds idle/auto-run defaults; `isValidV5` validator + tests; all v4-assuming tests retargeted. HubScene applies idle income on enter (read lastHubExitMs from save → compute accrued → `salvageStore.setTotal(total + accrued)` → call `overlay.showIdleBanner(amount)`), records new lastHubExitMs immediately so first-frame "+N salvage" doesn't double-apply, also records on SHUTDOWN. HubOverlay gains `showIdleBanner` (5s auto-fade green banner above the grid) + Auto-run toggle button (only rendered when `unlocksStore.has('auto-run')` — Eternal Engine tier-3 unlock). DeathScene reads `unlocksStore.has('auto-run') && autoRunStore.enabled` and routes click to RunScene (auto-relaunch) or HubScene; armed for when Phase 4.X+ wires train damage. Round-trip test covers exit→5min→re-enter applies +5 salvage; lastHubExitMs persists; autoRunEnabled persists; first-ever load (lastHubExitMs=0) accrues 0; v1 save migrates to v5 with idle/auto-run defaults. **First task this run with NO advisor follow-up needed** — consumer wiring landed in initial pass + screenshot proved end-to-end. Visual proof: task5-8-idle-banner.png shows "+30 idle Salvage gained while away" banner, Salvage 100→130, Auto-run: OFF toggle visible, 3 tech unlocks purchased. **372 unit pass** (+25: 9 idleIncomeMath + 4 autoRunStore + 6 saveSchema v5 retests + 6 round-trip), **3/3 E2E pass**, TS strict. | 372 unit ✅ · 3 E2E ✅ |
 | 2026-05-06 | claude (PM) | main | **Phase 5 Task 5.7: Tutorial overlay.** First-run modal explaining controls — 5 cards (The Run, Slow-time/SPACE, Salvage Persists, Hub & Tech Tree, Share Builds) + GOT IT dismiss button. Pure `tutorialState.ts` wraps localStorage with a versioned key `theline:tutorial-seen-v1` (try/catch around storage access so privacy-mode Safari can't crash boot — defensive default returns `true` in that case so the tutorial doesn't loop). New `TutorialOverlay.ts` DOM component with title + sub + 5-item list + ok button. HubScene shows it on enter when `hasSeenTutorial()` is false; SHUTDOWN destroys the overlay. **Deliberately not extending save schema** — this is per-browser UX state, not progression; keeps schema migrations bounded. New `tutorialState.test.ts` (+6: fresh→false, mark→true, reset→false, two-read persistence, throws-on-storage→defensive-true, versioned key in storage). Visual proof: task5-7-tutorial-overlay.png. **347 unit pass** (+6), **3/3 E2E pass**, TS strict. | 347 unit ✅ · 3 E2E ✅ |
@@ -52,15 +53,40 @@
 | 2026-05-05 | human + claude | main | Phase 1 docs (CLAUDE.md with audit-discipline section, DESIGN.md, PROGRESS.md, REVIEW_NOTES.md, README.md) | n/a |
 | 2026-05-05 | human + claude | main | Phase 0 scaffold (Vite + TS + Phaser ^3.90 + zustand + localforage + vitest + Playwright). MCP playwright wired. Repo pushed to https://github.com/josh-max2/THELINE. **Divergence:** Pinned Phaser to ^3.90 instead of latest 4.x because the build plan assumes v3 idioms. | n/a |
 
-## Next priorities (queue, ordered) — Phase 6 launch prep
+## Next priorities (queue, ordered) — Phase 6 post-pivot
 
-1. **READY** — Phase 6 Task 6.2: itch.io page + cover art draft.
-2. **NEXT** — Phase 6 Task 6.3: Balance simulator (live-runtime gauntlet for every module; deferred from 5.1 + 6.1).
-3. **NEXT** — Phase 6 Task 6.4: Trailer / GIF capture.
-4. **NEXT** — Phase 6 Task 6.5: Reddit + community announcement copy.
-5. **NEXT** — Phase 6 Task 6.6: Three external playtests + iteration.
-6. **NEXT** — Phase 6 Task 6.7: Performance budget pass (frame-time profiling under boss + swarm pressure).
-7. **NEXT** — Phase 6 Task 6.8: v1 launch.
+The 2026-05-06 design pivot reshuffled this list. Core gameplay
+re-alignment comes BEFORE launch prep — itch.io / trailer / playtests
+all hinge on the FTL-ified loop being shippable.
+
+1. **READY** — Phase 6 Task 6.2 (NEW): **FTL-ify the power UI.** Replace
+   continuous-slider PowerPanel with integer-bar UI (click +/- per system,
+   damaged systems lose top bars). Pure powerMath.ts already supports
+   integer math; just need new UI layer + damage-state hook.
+2. **NEXT** — Phase 6 Task 6.3 (NEW): **FTL-ify crew.** Drag/drop tokens
+   between cars; per-station XP (Pilot/Gunner/Engineer/Shield/Repair);
+   level cap 3; wounded state at 50% effect; no death in v1. Save schema
+   bump v5→v6 for crew XP + skills + station assignment.
+3. **NEXT** — Phase 6 Task 6.4 (NEW): **Strip starting loadout + run-store.**
+   New player begins with 1 Engine + 1 Weapon Car + 1 basic-cannon + 4
+   level-0 crew + 5 power bars + 0 Salvage. Between-encounter store
+   nodes let the player buy turrets/items/crew/repair with in-run salvage.
+   Engineering Bay placement UI reused. Tech Tree becomes the dominant
+   meta progression spine.
+4. **NEXT** — Phase 6 Task 6.5 (NEW): **Visual pass via CC0 sprites.**
+   Curate Kenney.nl + OpenGameArt CC0 packs (sci-fi train, particles,
+   UI). Wire into drawRecipe with sprite fallback. Maintain vector
+   silhouettes as base; sprites layer on top where they improve clarity.
+5. **NEXT** — Phase 6 Task 6.6: Balance simulator (deferred from 5.1 +
+   6.1; live-runtime gauntlet for every module).
+6. **NEXT** — Phase 6 Task 6.7: itch.io page + cover (deferred — Task
+   5.4 placeholder draft already in `docs/ITCH_PAGE.md`).
+7. **NEXT** — Phase 6 Task 6.8: Trailer / GIF capture.
+8. **NEXT** — Phase 6 Task 6.9: Three external playtests + iteration.
+9. **NEXT** — Phase 6 Task 6.10: Reddit + community announcement copy.
+10. **NEXT** — Phase 6 Task 6.11: Performance budget pass (frame-time
+    profiling under boss + swarm pressure).
+11. **NEXT** — Phase 6 Task 6.12: v1 launch.
 
 ## Open questions for human (Josh)
 
